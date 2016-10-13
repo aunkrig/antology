@@ -69,7 +69,6 @@
           </execution>
         </executions>
       </plugin>
-    </plugins>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -111,6 +110,78 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.4</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+
+          <!-- The ANT doclet requires JAVADOC 8. -->
+          <javadocExecutable>c:/Program Files/Java/jdk1.8.0_45/bin/javadoc.exe</javadocExecutable>
+ 
+          <doclet>de.unkrig.doclet.ant.AntDoclet</doclet>
+          <docletPath>
+            ../../../de.unkrig.doclet.ant/bin;
+            ../../../de.unkrig.commons.doclet/bin;
+            ../../../de.unkrig.commons.io/bin;
+            ../../../de.unkrig.commons.lang/bin;
+            ../../../de.unkrig.commons.net/bin;
+            ../../../de.unkrig.commons.text/bin;
+            ../../../de.unkrig.commons.util/bin;
+            ../../../no-template-core/bin;
+            ../../target/classes
+          </docletPath>
+          <docletArtifacts>
+            <docletArtifact>
+              <groupId>org.apache.ant</groupId>
+              <artifactId>ant</artifactId>
+              <version>1.8.4</version>
+            </docletArtifact>
+            <docletArtifact>
+              <groupId>commons-net</groupId>
+              <artifactId>commons-net</artifactId>
+              <version>3.1</version>
+            </docletArtifact>
+          </docletArtifacts>
+
+          <additionalparam>
+            -antlib-file ../classes/de/unkrig/antology/ant.xml
+            -theme       JAVA7
+          </additionalparam>
+
+          <author>false</author>
+          <use>false</use>
+          <version>false</version>
+          <offlineLinks>
+            <offlineLink>
+              <url>http://docs.oracle.com/javase/8/docs/api</url>
+              <location>../../package-lists/jre</location>
+            </offlineLink>
+            <offlineLink>
+              <url>http://commons.unkrig.de/javadoc</url>
+              <location>../../package-lists/de.unkrig.commons</location>
+            </offlineLink>
+            <offlineLink>
+              <url>https://commons.apache.org/proper/commons-net/apidocs</url>
+              <location>../../package-lists/org.apache.commons.net</location>
+            </offlineLink>
+            <offlineLink>
+              <url>http://api.dpml.net/org/apache/ant/1.7.0</url>
+              <location>../../package-lists/org.apache.ant</location>
+            </offlineLink>
+          </offlineLinks>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <licenses>
