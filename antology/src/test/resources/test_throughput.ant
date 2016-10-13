@@ -1,0 +1,22 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<throughput currentDuration="1.0s" quantityUnit="KB" currentQuantity="100" />
+	</target>
+
+	<target name="test2">
+		<throughput
+			previousQuantity="1000" currentQuantity="2000"    remainingQuantity="3000"
+			previousDuration="30s"  currentBeginning="2014-03-05 13:00" currentDuration="0:01:00" remainingBeginning="2014-01-01"
+			quantityUnit="KB"
+			showEta="true"
+		/>
+	</target>
+</project>

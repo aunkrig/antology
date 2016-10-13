@@ -1,0 +1,68 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<xmlProperty2 prefix="prefix.">
+			<![CDATA[<?xml version='1.0' encoding='UTF-8'?>
+<project name="prj1">
+	<target name="trg1">
+		<echo message="msg" />
+	</target>
+</project>
+			]]>
+		</xmlProperty2>
+		<echoproperties />
+	</target>
+
+	<target name="test2">
+		<property name="prefix.0.#"                                value="LEADING COMMENT"               />
+		<property name="prefix.1.project._name"                    value="prj1"                          />
+		<property name="prefix.1.project.0.$"                      value="&#10;&#9;"                     />
+		<property name="prefix.1.project.1.target._name"           value="trg1"                          />
+		<property name="prefix.1.project.1.target.0.$"             value="&#10;&#9;&#9;"                 />
+		<property name="prefix.1.project.1.target.1.echo._message" value="msg"                           />
+		<property name="prefix.1.project.1.target.2.echo"          value="xxx"                           />
+		<property name="prefix.1.project.1.target.3.$"             value="&#10;&#9;&#9;"                 />
+		<property name="prefix.1.project.1.target.4.#"             value=" MY COMMENT "                  />
+		<property name="prefix.1.project.1.target.5.$"             value="&#10;&#9;&#9;"                 />
+		<property name="prefix.1.project.1.target.6.!"             value=" MY CDATA "                    />
+		<property name="prefix.1.project.1.target.7.$"             value="&#10;&#9;&#9;"                 />
+		<property name="prefix.1.project.1.target.8.?"             value="MY  PROCESSING  INSTRUCTION  " />
+<!--
+		<property name="prefix.1.project.1.target.9.$"             value="&#10;&#9;&#9;"                 />
+		<property name="prefix.1.project.1.target.10.&amp;"        value="amp"                           />
+		<property name="prefix.1.project.1.target.11.&amp;"        value="lt"                            />
+-->
+		<property name="prefix.1.project.1.target.12.$"            value="&#10;&#9;"                     />
+		<property name="prefix.1.project.2.$"                      value="&#10;"                         />
+		<property name="prefix.2.#"                                value="TRAILING COMMENT"              />
+
+		<propertyXml2 prefix="prefix." />
+	</target>
+
+	<target name="test3">
+		<property name="CDATA" value="&lt;![CDATA[" />
+		<property name="ATADC" value="]]&gt;" />
+		<xmlProperty2 prefix="prefix." lexical="true" failOnError="false">
+			<![CDATA[<?xml version='1.0' encoding='UTF-8'?>
+<!-- MY COMMENT -->
+<project name="prj1">
+	bla ${CDATA}bla${ATADC} bla
+	<target name="trg1">
+		<echo message="msg" />
+		&amp;&lt;
+	</target>
+</project>
+<!--ONE MORE-->
+			]]>
+		</xmlProperty2>
+		<echoproperties />
+	</target>
+</project>

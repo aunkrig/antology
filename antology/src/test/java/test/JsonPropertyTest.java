@@ -38,7 +38,7 @@ public
 class JsonPropertyTest extends BuildFileTest {
 
     @Override public void
-    setUp() { this.configureProject("build.ant"); }
+    setUp() { this.configureProject("target/test-classes/test_jsonProperty.ant"); }
 
     @Test public void
     testJsonProperty() {

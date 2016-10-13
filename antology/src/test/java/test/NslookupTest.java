@@ -43,7 +43,7 @@ public
 class NslookupTest extends BuildFileTest {
 
     @Override public void
-    setUp() { this.configureProject("nslookup_test.ant"); }
+    setUp() { this.configureProject("target/test-classes/test_nslookup.ant"); }
 
     @Test public void
     test1() {

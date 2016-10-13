@@ -1,0 +1,32 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin"   />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<nslookup
+			host="localhost"
+			addressesProperty="addresses"
+			addressProperty="address"
+			canonicalHostNameProperty="canonicalHostName"
+			hostNameProperty="hostName"
+		/>
+		<echo message="${addresses};${address};${canonicalHostName};${hostName}" />
+	</target>
+
+	<target name="test2">
+		<nslookup
+			host="www.google.com"
+			addressesProperty="addresses"
+			addressProperty="address"
+			canonicalHostNameProperty="canonicalHostName"
+			hostNameProperty="hostName"
+		/>
+		<echo message="${addresses};${address};${canonicalHostName};${hostName}" />
+	</target>
+</project>

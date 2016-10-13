@@ -1,0 +1,36 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin"   />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<echo message="Please create or open 'test.txt', add some text, and save." />
+		<follow file="test.txt" stdout="true" />
+	</target>
+
+	<target name="test2">
+		<follow file="test.txt">
+			<filterchain>
+				<progress bytesPerTick="1" exponential="false" />
+				<linecontainsregexp><regexp pattern="Alfresco started|Server startup in \d+ ms" /></linecontainsregexp>
+<!--				<linecontains><contains value="ERROR" /></linecontains>-->
+			</filterchain>
+		</follow>
+	</target>
+
+	<target name="followHttp">
+		<echo message="foo" />
+		<follow
+			url="http://localhost:3000/test.txt"
+			timeout="100000000"
+			failOnTimeout="false"
+			stdout="true"
+		/>
+		<echo message="bar" />
+	</target>
+</project>

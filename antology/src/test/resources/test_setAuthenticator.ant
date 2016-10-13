@@ -1,0 +1,27 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<setAuthenticator />
+<!--		<urlConnection url="https://dal-i.intra.swm.de/dal/d/d/workspace/SpacesStore/68298e5d-f9ba-4831-b0a5-4d7f8786e1aa/Neues%20Dokument%20Allgemein.xlsx">
+			<input stdout="true" />
+		</urlConnection>-->
+<!--		<urlConnection url="http://localhost:8080/dal/d/d/workspace/SpacesStore/68298e5d-f9ba-4831-b0a5-4d7f8786e1aa/Neues%20Dokument%20Allgemein.xlsx">
+			<input stdout="true" />
+		</urlConnection>-->
+		<urlConnection url="http://jugm.de/members/private/archiv/intro_to_neo4j.pdf">
+			<input discard="true">
+				<filterchain>
+					<progress />
+				</filterchain>
+			</input>
+		</urlConnection>
+	</target>
+</project>

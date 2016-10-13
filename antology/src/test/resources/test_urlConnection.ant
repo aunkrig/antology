@@ -1,0 +1,42 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+
+		<!-- Enable Java's HTTP cookie management (necessary for CAS). -->
+		<setCookieHandler />
+
+		<urlConnection
+			url="http://adminapps.intra.swm.de/cgi-bin/tomcatservice3.exe?tomcatlist=dal-i.intra.swm.de&amp;serverlist=svdali03&amp;Aktion=Status"
+			httpFollowRedirects="false"
+			httpFollowRedirects2="true"
+		>
+			<input stdout="true" />
+		</urlConnection>
+	</target>
+
+	<target name="test2">
+
+		<!-- Enable Java's HTTP cookie management (necessary for CAS). -->
+		<setCookieHandler />
+
+		<urlConnection
+			url="http://adminapps.intra.swm.de/cgi-bin/tomcatservice3.exe?tomcatlist=dal-i.intra.swm.de&amp;serverlist=svdali03&amp;Aktion=Status"
+			httpFollowRedirects="false"
+			httpFollowRedirects2="true"
+		>
+			<input stdout="true">
+				<filterchain>
+					<linecontains><contains value="Statusabfrage des Tomcat für dal-i.intra.swm.de auf Server svdali03"/></linecontains>
+				</filterchain>
+			</input>
+		</urlConnection>
+	</target>
+</project>

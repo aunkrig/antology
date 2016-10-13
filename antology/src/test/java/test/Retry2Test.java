@@ -28,15 +28,14 @@ package test;
 
 import java.util.regex.Pattern;
 
-import junit.framework.ComparisonFailure;
-import junit.framework.TestCase;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.BuildFileTest;
 import org.apache.tools.ant.ExitStatusException;
 import org.junit.Test;
 
 import de.unkrig.commons.nullanalysis.Nullable;
+import junit.framework.ComparisonFailure;
+import junit.framework.TestCase;
 
 // CHECKSTYLE JavadocMethod:OFF
 
@@ -47,7 +46,7 @@ public
 class Retry2Test extends BuildFileTest {
 
     @Override public void
-    setUp() { this.configureProject("test_retry2.ant"); }
+    setUp() { this.configureProject("target/test-classes/test_retry2.ant"); }
 
     @Test public void
     test1() {

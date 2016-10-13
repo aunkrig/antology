@@ -1,0 +1,21 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<waitfor maxwait="5" maxwaitunit="second">
+			<and>
+				<every seconds="1.4" />
+				<successful>
+					<echo message="FOO" />
+				</successful>
+				<false />
+			</and>
+		</waitfor>
+	</target>
+</project>

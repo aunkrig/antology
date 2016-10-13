@@ -28,11 +28,11 @@ package test;
 
 import java.util.regex.Pattern;
 
-import junit.framework.TestCase;
-
 import org.apache.tools.ant.BuildFileTest;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 // CHECKSTYLE JavadocMethod:OFF
 
@@ -43,7 +43,7 @@ public
 class ForEach2Test extends BuildFileTest {
 
     @Override public void
-    setUp() { this.configureProject("test_forEach2.ant"); }
+    setUp() { this.configureProject("target/test-classes/test_forEach2.ant"); }
 
     @Test public void
     test1() {
@@ -146,23 +146,23 @@ class ForEach2Test extends BuildFileTest {
         this.executeTarget("test8");
         TestCase.assertEquals((
             ""
-            + "Processing 'files/ALPHA.txt' (5 of 17 bytes = 29.4%)"
-            + "Content of file 'files/ALPHA.txt':"
-            + "One"
+            + "Processing 'target/test-classes/test_forEach2/ALPHA.txt' (5 of 17 bytes = 29.4%)"
+            + "| Content of file 'target/test-classes/test_forEach2/ALPHA.txt':"
+            + "| One"
             + "... done! Took 500ms (5 bytes @ 10 bytes/s"
             + "; 5 of 17 bytes complete = 29.4% @ 10 bytes/s"
             + "; 12 bytes remaining = approx. 1.2s)"
             + ""
-            + "Processing 'files/BETA.txt' (5 of 17 bytes = 29.4% = approx. 500ms)"
-            + "Content of file 'files/BETA.txt':"
-            + "Two"
+            + "Processing 'target/test-classes/test_forEach2/BETA.txt' (5 of 17 bytes = 29.4% = approx. 500ms)"
+            + "| Content of file 'target/test-classes/test_forEach2/BETA.txt':"
+            + "| Two"
             + "... done! Took 500ms (5 bytes @ 10 bytes/s"
             + "; 10 of 17 bytes complete = 58.8% @ 10 bytes/s"
             + "; 7 bytes remaining = approx. 700ms)"
             + ""
-            + "Processing 'files/GAMMA.txt' (7 of 17 bytes = 41.2% = approx. 700ms)"
-            + "Content of file 'files/GAMMA.txt':"
-            + "Three"
+            + "Processing 'target/test-classes/test_forEach2/GAMMA.txt' (7 of 17 bytes = 41.2% = approx. 700ms)"
+            + "| Content of file 'target/test-classes/test_forEach2/GAMMA.txt':"
+            + "| Three"
             + "... done! Took 500ms (7 bytes @ 14 bytes/s"
             + "; 17 of 17 bytes complete = 100.0% @ 11 bytes/s)"
         ), this.getLog());

@@ -1,0 +1,120 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+		</classpath>
+	</taskdef>
+
+	<!-- Iterate over list. -->
+	<target name="test1">
+		<forEach2 list="1 2  3" delimiter=" " param="p">
+			<sequential>
+				<echo message="@{p}" />
+			</sequential>
+		</forEach2>
+	</target>
+
+	<!-- Iterate over resource collection. -->
+	<target name="test2">
+		<property name="foo.alpha" value="ALPHA" />
+		<property name="foo.beta"  value="BETA"  />
+		<forEach2 param="p">
+			<propertyset><propertyRef prefix="foo" /></propertyset>
+			<sequential>
+				<echo message="@{p}" />
+			</sequential>
+		</forEach2>
+	</target>
+
+	<!-- BREAK. -->
+	<target name="test3">
+		<forEach2 list="1,2,3" param="p">
+			<sequential>
+				<break><equals arg1="@{p}" arg2="3" /></break>
+				<echo message="@{p}" />
+			</sequential>
+		</forEach2>
+	</target>
+
+	<!-- CONTINUE. -->
+	<target name="test4">
+		<forEach2 list="1,2,3" param="p">
+			<sequential>
+				<continue><equals arg1="@{p}" arg2="2" /></continue>
+				<echo message="@{p}" />
+			</sequential>
+		</forEach2>
+	</target>
+
+	<!-- THROUGHPUT on list. -->
+	<target name="test5">
+		<forEach2 list="1,2,3" param="p" message="Processing '@{p}'" currentDuration="500ms" >
+			<sequential />
+		</forEach2>
+	</target>
+
+	<!-- THROUGHPUT on resource with 'showEta'. -->
+	<target name="test6">
+		<forEach2
+			param="p"
+			message="Processing '@{p}'"
+			showEta="true"
+			currentBeginning="2013-01-01"
+			currentDuration="5s"
+			remainingBeginning="2014-01-01"
+		>
+			<union>
+				<literalResource name="A" value="0123456789" />
+				<literalResource name="B" value="01234567890123456789" />
+				<literalResource name="C" value="012345678901234567890123456789" />
+			</union>
+			<sequential />
+		</forEach2>
+	</target>
+
+	<!-- THROUGHPUT on resource. -->
+	<target name="test7">
+		<forEach2 param="p" message="Processing '@{p}'" currentDuration="500ms">
+			<union>
+				<literalResource name="A" value="0123456789" />
+				<literalResource name="B" value="01234567890123456789" />
+				<literalResource name="C" value="012345678901234567890123456789" />
+			</union>
+			<sequential />
+		</forEach2>
+	</target>
+
+	<!-- THROUGHPUT on properties. -->
+	<target name="test8">
+		<property name="xx.alpha.yy" value="target/test-classes/test_forEach2/ALPHA.txt" />
+		<property name="xx.beta.yy"  value="target/test-classes/test_forEach2/BETA.txt"  />
+		<property name="xx.gamma.yy" value="target/test-classes/test_forEach2/GAMMA.txt" />
+		<forEach2 param="p" message="Processing '@{p}'" currentDuration="500ms">
+			<sort>
+				<name />
+				<resourceTransformer name="CONTENT" content="CONTENT_AS_FILE">
+					<propertyset>
+						<mapper type="regexp" from="xx\.(\w+)\.yy" to="\1" />
+						<propertyref regex="xx\.\w+\.yy" />
+					</propertyset>
+				</resourceTransformer>
+			</sort>
+			<sequential>
+				<echo message="Content of file '@{p}':" />
+				<concat><fileset file="@{p}" /></concat>
+			</sequential>
+		</forEach2>
+	</target>
+
+	<!-- THROUGHPUT on <fileset>. -->
+	<target name="test9">
+		<echo message="message_default"                 />
+		<echo message="message_error"   level="error"   />
+		<echo message="message_warning" level="warning" />
+		<echo message="message_info"    level="info"    />
+		<echo message="message_verbose" level="verbose" />
+		<echo message="message_debug"   level="debug"   />
+	</target>
+</project>

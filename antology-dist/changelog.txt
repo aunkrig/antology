@@ -2,7 +2,7 @@
 Change Log of Antology
 ======================
 
-Version 1.1.7, ?
+Version 2.0.0, ?
   * Renamed the project from "de.unkrig.ant-contrib" to "antology".
   * Moved the source repository from "https://svn.code.sf.net/p/loggifier/code/trunk/de.unkrig.ant-contrib" to
     "https://github.com/aunkrig/antology/trunk/antology".

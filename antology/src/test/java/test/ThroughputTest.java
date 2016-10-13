@@ -40,7 +40,7 @@ public
 class ThroughputTest extends BuildFileTest {
 
     @Override public void
-    setUp() { this.configureProject("throughput_test.ant"); }
+    setUp() { this.configureProject("target/test-classes/test_throughput.ant"); }
 
     @Test public void
     test1() {

@@ -38,7 +38,7 @@ public
 class ConditionsTest extends BuildFileTest {
 
     @Override public void
-    setUp() { this.configureProject("test_conditions.ant"); }
+    setUp() { this.configureProject("target/test-classes/test_conditions.ant"); }
 
     @Test public void
     test1() {

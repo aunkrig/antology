@@ -1,0 +1,30 @@
+<project>
+
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<taskdef
+		classpath="lib/ant-contrib-1.0b3.jar"
+		resource="net/sf/antcontrib/antlib.xml"
+	/>
+
+	<target name="testJsonProperty">
+		<echo file="tmp.json"><![CDATA[
+{
+	"a" : 3,
+	"b" : false,
+	"c" : null,
+	"d" : [ 1, 2, "3" ],
+	"e" : { "f" : 7.3 }
+}
+]]></echo>
+		<jsonProperty file="tmp.json" name="foo" />
+		<echoproperties prefix="foo" />
+		<delete file="tmp.json" />
+	</target>
+</project>

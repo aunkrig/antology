@@ -1,0 +1,24 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../de.unkrig.ant-contrib/bin" />
+			<pathelement location="../de.unkrig.commons.io/bin" />
+			<pathelement location="../de.unkrig.commons.lang/bin" />
+		</classpath>
+	</taskdef>
+
+	<!--
+		Initial try, fails
+		Sleep 1 sec
+		1st retry, fails
+		Sleep 2 secs
+		2nd retry, fails
+		Fail
+	-->
+	<target name="test1">
+		<retry2 status="77" retryCount="2" retryDelay="1sec" retryDelayExponent="2" delayIntervalBegin="2012-01-01">
+			<fail status="77" message="Nested task failed" />
+		</retry2>
+	</target>
+</project>
