@@ -1,0 +1,153 @@
+
+Change Log of Antology
+======================
+
+Version 1.1.7, ?
+  * Renamed the project from "de.unkrig.ant-contrib" to "antology".
+  * Moved the source repository from "https://svn.code.sf.net/p/loggifier/code/trunk/de.unkrig.ant-contrib" to
+    "https://github.com/aunkrig/antology/trunk/antology".
+  * Changed the build system from ANT to MAVEN.
+  * Renamed Java packages from "de.unkrig.antcontrib" to "de.unkrig.antology".
+
+Version 1.1.6, 2016-06-17:
+  * Added the "<swingLookAndFeel>" task.
+
+Version 1.1.5, 2015-12-09:
+  * <setAuthenticator>: The user/password dialog was unusable on one particular machine - added a workaround.
+  * The call to "setDoOutput(true)" was previously lost, inhibiting any POST and PUT requests.
+
+Version 1.1.4, 2015-12-02:
+  * Output of the subtasks of "<forEach2>" and "<throughput>" now appears prefixed with "| ".
+  * <urlConnection>: In case of an exception, also report the duration of the attempt.
+  * <setAuthenticator>: Restored the original behavior where "no <credential> subelements" means "Always ask for
+    user name AND password".
+
+Version 1.1.3, 2015-09-25:
+  * Added ANTDOC generation to the build process.
+  * Fixed Dario's NPE in the <jsonProperty> task (again, sigh).
+
+Version 1.1.2, 2015-09-24:
+  * <jsonProperty> task: Fixed an NPE.
+  * <swingDialog> task: May contain character data as an alternative to the <label>, <text>, <textField>, <textArea>,
+    <checkbox>, <radioButton>, <list> and <separator> subelements.
+  * <swingDialog> task: Subelement <list> now has an attribute "visibleRowCount=..." to fix its vertical size.
+
+Version 1.1.1, 2015-09-23:
+  * <swingDialog>: Label, Checkbox and RadioButton tags may now contain literal text, as an alternative to the
+    "text=..." attribute. Particularly useful in connection with HTML label text and CDATA sections.
+
+Version 1.1.0, 2015-09-11:
+  * <setAuthenticator>: The authenticator now returns "null" when no "<credentials>" matches (instead of "user=null,
+    password=null").
+  * Added the "<ftp2>" task, which extends the "<ftp>" task with proxy capabilities.
+
+Version 1.0.18, 2015-05-05:
+  * <swingDialog> / <textField>: Added the "label" attribute which makes it possible to have labels LEFT from a text
+    field.
+  * <swingDialog> / <textField>: Added the "labelWidth" attribute to be able to align multiple labelled text fields
+    vertically.
+
+Version 1.0.17, 2015-04-17:
+  * <swingDialog>: Added the "<textArea>" subelement.
+
+Version 1.0.16, 2015-04-07:
+  * <swingDialog>: Added the 'labels="..."' attribute so that the list can display text different from the
+    'values="..."'.
+
+Version 1.0.15, June 25 2014:
+  * <urlConnection><jsonAsproperties>: Response was always decoded with charset 'ISO-8859-1' instead of the
+    connection's charset (reponse header 'Content-Type').
+  * Added the '<tee>' filter reader.
+  * <forEach2>, <throughput>: Added 'currentQuantity="..."' attribute.
+  * <forEach2>, <throughput>: Report cumulated throughput iff previousQuantity is known.
+  * <setAuthenticator>: Shorten very long URLs when displayed in the authentication dialog.
+  * <urlConnection>: Added 'append="true"' attribute.
+  
+
+Version 1.0.14, May 1 2014:
+  * Moved the <log>, <logging> and <simpleLogging> tasks from 'de.unkrig.commons.util' to 'de.unkrig.antcontrib'.
+  * <logging>: Removed attribute 'parent="..."'; added attribute 'clearFilter="true"'.
+  * <simpleLogging>: Attribute 'debug="..."' no longer is boolean, but "FINE|FINER|FINEST".
+  * ANT-CONTRIB now uses 'de.unkrig.commons' - which is possible since the 'de.unkrig.commons' classes are renamed by
+    JARJAR.
+  * Moved JSON-related classes from 'de.unkrig.antcontrib' to 'de.unkrig.commons.text.json'.
+  * Moved 'Duration', 'PointOfTime' and 'TimeInterval' from 'de.unkrig.antcontrib.util' to
+    'de.unkrig.commons.util.time'.
+
+Version 1.0.13, Apr 07 2014:
+  * <forEach2>, <throughput>: Added automatic singularization of quantity unit.
+  * <forEach2>: Added substitution of '@{param}'.
+  * <throughput>: Removed redundant 'quantityUnit' in beforeMessage and afterMessage.
+  * <urlConnection>: Fixed the code for deleting partially written files (previously, half-READ files were deleted).
+  * Added resource collection '<resourceTransformer>'.
+  * <retry2>: Print locations when reporting nested task failure.
+  * <forEach2>: Added 'count="N"' attribute
+  * <forEach2>: Loop indefinitely (until FAIL or BREAK) if none of 'count', 'list' and Iterable are configured.
+  * <forEach2>: Added attribute 'quantityUnit="..."'.
+  * <throughput>: Eliminated some 'division by zero' problems (resulted in ugly 'NaN' percentages).
+
+Version 1.0.12, Mar 11 2014:
+  * Added new resource collection '<literalResource>'.
+  * <forEach2>: Added 'message=...' and 'showEta=...' which enable a throughput analysis in the style of <throughput>.
+
+Version 1.0.11, Mar 06 2014:
+  * <urlConnection> and <jsonAsProperties> tasks: Left-pad array indexes with zeros to make life easier for ANT
+    (which has no numeric sorting feature).
+  * <throughput> task: Added the 'before message' feature.
+
+Version 1.0.10, Feb 24 2014:
+  * Added the '<forEach2>' '<break> and '<continue>' tasks.  
+  * Added the '<retry2>' task.
+  * 'Duration' no longer recognizes the 'mm:ss' pattern because the ambiguity with 'hh:mm' is extremely confusing. Use
+    'hh:mm:ss' instead.
+
+Version 1.0.9, Feb 23 2014:
+  * <swingDialog>: Added the 'enabled=...' attribute to '<text>', '<checkbox>' and '<list>'.
+  * <resourceCollectionDelta>: Update the 'delta state' only when the RCD has been completely iterated. The latter is a
+    strong indicator that the processing of the RCD was successful.
+  * Added the '<resourceNames>' resource collection.
+  * Added the '<throughput>' task.
+  * Added the '<every>', '<false>', '<successful>' and '<true>' conditions.
+
+Version 1.0.8, Jan 23 2014:
+  * <swingDialog>: Added the 'defaultIndices=...' attribute.
+  * <swingDialog>: Added the 'focus=true' attribute for the subelements.
+
+Version 1.0.7, Dec 29 2013:
+  * <urlConnection>: Added subelement '<formField name=... value=...>' to UrlElement, making HTML form submission
+    easier.
+
+Version 1.0.6, Dec 13 2013:
+  * Added the '<nslookup>' task.
+  * Added the '<follow>' task.
+  * Added the '<resourceCollectionDelta>' type.
+  * <urlConnection>: addConfiguredMultipartFormData: N different entries appeared as N time the FIRST entry.
+  * Added the '<progress>' FilterReader.
+  * <setAuthenticator>: Set the keyboard focus on the user name field.
+  * <urlConnection>: <filterchain> was ignored.
+
+Version 1.0.5, Nov 20 2013:
+  * Removed the 'de.unkrig.ant-contrib.' prefix from the task and type names.
+  * Added the <jsonProperty> task which parses a JSON document into a set of properties, in analogy with the
+    <xmlproperty> standard ANT task.
+  * Added the <setCookieHandler> task which enables cookie processing for HttpURLConnections, including the
+    <urlConnection> task.
+  * Added the 'followRedirects2=true' attribute to the '<urlConnection>' task for enhanced HTTP redirection
+    handling.
+  * Default behavior for '<urlConnection><input>' is now to copy the input to STDOUT.
+
+Version 1.0.4, Nov 11 2013:
+  (No change log available.)
+  
+Version 1.0.3, Oct 18 2013:
+  (No change log available.)
+  
+Version 1.0.2, Oct 17 2013:
+  (No change log available.)
+  
+Version 1.0.1, Jun 14 2013:
+  (No change log available.)
+  
+Version 1.0.0, May 30 2013:
+  (No change log available.)
+  
