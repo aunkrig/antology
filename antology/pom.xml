@@ -1,5 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -29,11 +32,8 @@
 
   <groupId>de.unkrig</groupId>
   <artifactId>antology</artifactId>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>2.0.0</version>
   <packaging>jar</packaging>
-
-  <name>antology</name>
-  <url>http://antology.unkrig.de</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -68,7 +68,7 @@
     <dependency>
       <groupId>de.unkrig</groupId>
       <artifactId>de-unkrig-commons</artifactId>
-      <version>1.1.11</version>
+      <version>1.1.12</version>
     </dependency>
   </dependencies>
 
@@ -77,11 +77,6 @@
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
-          <archive>
-            <manifest>
-              <mainClass>de.unkrig.jsh.Main</mainClass>
-            </manifest>
-          </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
@@ -150,10 +145,11 @@
             </goals>
           </execution>
         </executions>
+
         <configuration>
 
           <!-- The ANT doclet requires JAVADOC 8. -->
-          <javadocExecutable>c:/Program Files/Java/jdk1.8.0_05/bin/javadoc.exe</javadocExecutable>
+          <javadocExecutable>c:/Program Files/Java/jdk1.8.0_45/bin/javadoc.exe</javadocExecutable>
 
           <quiet>true</quiet>
  
@@ -165,7 +161,7 @@
             <docletArtifact>
               <groupId>de.unkrig</groupId>
               <artifactId>doclet-ant</artifactId>
-              <version>1.0.1-SNAPSHOT</version>
+              <version>1.0.1</version>
             </docletArtifact>
 
 			<!-- The ANT doclet requires "ant.jar" on its classpath: -->
@@ -211,6 +207,17 @@
       </plugin>
     </plugins>
   </build>
+  <name>antology</name>
+  <description>
+    The ANTOLOGY Ant library contributes useful tasks and types to APACHE ANT. It integrates seamlessly with other libraries like ant-contrib.
+  </description>
+  <organization>
+  	<url>http://antology.unkrig.de/</url>
+  </organization>
+
+  <scm>
+  	<url>https://github.com/aunkrig/antology</url>
+  </scm>
 
   <licenses>
     <license>
@@ -219,6 +226,17 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-  <description>The ANTOLOGY Ant library contributes useful tasks and types to APACHE ANT. It integrates seamlessly with other libraries like ant-contrib.
-</description>
+
+  <developers>
+    <developer>
+      <id>aunkrig</id>
+      <name>Arno Unkrig</name>
+      <roles>
+        <role>Developer</role>
+        <role>Release Manager</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <url>http://antology.unkrig.de/</url>
 </project>
