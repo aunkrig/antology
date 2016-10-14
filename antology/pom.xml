@@ -61,15 +61,14 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant-commons-net</artifactId>
+      <version>1.8.4</version>
+    </dependency>
+    <dependency>
       <groupId>de.unkrig</groupId>
       <artifactId>de-unkrig-commons</artifactId>
       <version>1.1.11</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-      <version>3.1</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -154,30 +153,33 @@
         <configuration>
 
           <!-- The ANT doclet requires JAVADOC 8. -->
-          <javadocExecutable>c:/Program Files/Java/jdk1.8.0_45/bin/javadoc.exe</javadocExecutable>
+          <javadocExecutable>c:/Program Files/Java/jdk1.8.0_05/bin/javadoc.exe</javadocExecutable>
+
+          <quiet>true</quiet>
  
           <doclet>de.unkrig.doclet.ant.AntDoclet</doclet>
           <docletPath>
-            ../../../de.unkrig.doclet.ant/bin;
-            ../../../de.unkrig.commons.doclet/bin;
-            ../../../de.unkrig.commons.io/bin;
-            ../../../de.unkrig.commons.lang/bin;
-            ../../../de.unkrig.commons.net/bin;
-            ../../../de.unkrig.commons.text/bin;
-            ../../../de.unkrig.commons.util/bin;
-            ../../../no-template-core/bin;
-            ../../target/classes
+            ../classes
           </docletPath>
           <docletArtifacts>
+            <docletArtifact>
+              <groupId>de.unkrig</groupId>
+              <artifactId>doclet-ant</artifactId>
+              <version>1.0.1-SNAPSHOT</version>
+            </docletArtifact>
+
+			<!-- The ANT doclet requires "ant.jar" on its classpath: -->
             <docletArtifact>
               <groupId>org.apache.ant</groupId>
               <artifactId>ant</artifactId>
               <version>1.8.4</version>
             </docletArtifact>
+
+            <!-- The "EnumeratedAttribute"s of the "FTP2" task require the following on the doclet classpath: -->
             <docletArtifact>
-              <groupId>commons-net</groupId>
-              <artifactId>commons-net</artifactId>
-              <version>3.1</version>
+              <groupId>org.apache.ant</groupId>
+              <artifactId>ant-commons-net</artifactId>
+              <version>1.8.4</version>
             </docletArtifact>
           </docletArtifacts>
 
@@ -190,10 +192,6 @@
           <use>false</use>
           <version>false</version>
           <offlineLinks>
-            <offlineLink>
-              <url>http://docs.oracle.com/javase/8/docs/api</url>
-              <location>../../package-lists/jre</location>
-            </offlineLink>
             <offlineLink>
               <url>http://commons.unkrig.de/javadoc</url>
               <location>../../package-lists/de.unkrig.commons</location>
@@ -208,7 +206,7 @@
             </offlineLink>
           </offlineLinks>
 
-          <destDir>target/antdoc</destDir>
+          <outputDirectory>target/antdoc</outputDirectory>
         </configuration>
       </plugin>
     </plugins>
