@@ -219,7 +219,7 @@ class TeeFilter extends ProjectComponent implements ChainableReader {
             addProperties(Properties props) { super.addProperties(props); }
         }
 
-        private boolean isXml;
+        private boolean              isXml;
         private final MyPropertyTask delegate = new MyPropertyTask();
 
         /**

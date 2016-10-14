@@ -77,7 +77,7 @@ class LiteralResource extends StringResource {
     /** (Unclear.) */
     @NotNullByDefault(false) @Override public void setRefid(Reference r) { super.setRefid(r); }
     /** Add nested text to the value of this resource. Properties will be expanded during this process. */
-    @Override public void addText(String text) { super.addText(text); }
+    @NotNullByDefault(false) @Override public void addText(String text) { super.addText(text); }
 
     @Override public String
     toString() { return this.getName() + "=" + this.getValue(); }

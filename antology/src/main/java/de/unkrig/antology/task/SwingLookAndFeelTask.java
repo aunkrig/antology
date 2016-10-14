@@ -63,11 +63,11 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class SwingLookAndFeelTask extends Task {
 
-    @Nullable public String lookAndFeelNameProperty, lookAndFeelIdProperty, lookAndFeelClassNameProperty;
-    @Nullable public String auxiliaryLookAndFeelNamesProperty, auxiliaryLookAndFeelIdsProperty;
-    @Nullable public String installedLookAndFeelNamesProperty, installedLookAndFeelClassNamesProperty;
-    @Nullable public String name, id, className;
-    public String           separator = ",";
+    @Nullable private String lookAndFeelNameProperty, lookAndFeelIdProperty, lookAndFeelClassNameProperty;
+    @Nullable private String auxiliaryLookAndFeelNamesProperty, auxiliaryLookAndFeelIdsProperty;
+    @Nullable private String installedLookAndFeelNamesProperty, installedLookAndFeelClassNamesProperty;
+    @Nullable private String className;
+    private String           separator = ",";
 
     /**
      * Store the name, ID or class name of the currently loaded look-and-feel in the named property.

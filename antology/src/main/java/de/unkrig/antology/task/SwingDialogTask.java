@@ -1008,7 +1008,9 @@ class SwingDialogTask extends Task {
             for (int i = 0; i < listData.length; i++) {
                 listData[i] = i < labels.length ? labels[i] : values[i];
             }
-            final JList jList = new JList(listData);
+
+            // JList was parameterized in Java 7; but we want to retain backwards compatibility with Java 6.
+            @SuppressWarnings({ "rawtypes", "unchecked" }) final JList jList = new JList(listData);
             jList.setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
 
             // focus=...
@@ -1088,7 +1090,10 @@ class SwingDialogTask extends Task {
         }
 
         private static void
-        select(JList jList, int[] indices) {
+        select(
+            @SuppressWarnings("rawtypes") JList jList, // JList was parameterized in Java 7; but we want to retain backwards compatibility with Java 6. SUPPRESS CHECKSTYLE LineLength
+            int[]                               indices
+        ) {
 
             for (int index : indices) {
                 if (index < 0 || index >= jList.getModel().getSize()) {
@@ -1156,7 +1161,8 @@ class SwingDialogTask extends Task {
 
         OptionType(int value) { this.value = value; }
 
-        int intValue() { return this.value; } // SUPPRESS CHECKSTYLE Javadoc
+        int
+        intValue() { return this.value; }                // SUPPRESS CHECKSTYLE Javadoc
     }
 
     /** Enum wrapper for the 'showXxxDialog()' return type. */
@@ -1180,7 +1186,9 @@ class SwingDialogTask extends Task {
             }
             throw new IllegalArgumentException(Integer.toString(value));
         }
-        int intValue() { return this.value; } // SUPPRESS CHECKSTYLE Javadoc
+
+        int
+        intValue() { return this.value; }  // SUPPRESS CHECKSTYLE Javadoc
     }
 
     /** Enum wrapper for the 'selectionMode' parameter. */
@@ -1195,7 +1203,8 @@ class SwingDialogTask extends Task {
 
         SelectionMode(int value) { this.value = value; }
 
-        int intValue() { return this.value; } // SUPPRESS CHECKSTYLE Javadoc
+        int
+        intValue() { return this.value; }                                  // SUPPRESS CHECKSTYLE Javadoc
     }
 
     /** Enum wrapper for the 'messageType' parameter. */
@@ -1212,7 +1221,8 @@ class SwingDialogTask extends Task {
 
         MessageType(int value) { this.value = value; }
 
-        int intValue() { return this.value; } // SUPPRESS CHECKSTYLE Javadoc
+        int
+        intValue() { return this.value; }             // SUPPRESS CHECKSTYLE Javadoc
     }
 
     @Override public void
