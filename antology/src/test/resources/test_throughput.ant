@@ -2,8 +2,7 @@
 <project>
 	<taskdef resource="de/unkrig/antology/ant.xml">
 		<classpath>
-			<pathelement location="../de.unkrig.ant-contrib/bin" />
-			<pathelement location="../de.unkrig.commons.io/bin" />
+			<pathelement location="../antology/target/antology-2.0.0-SNAPSHOT-jar-with-dependencies.jar" />
 		</classpath>
 	</taskdef>
 
