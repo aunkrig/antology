@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <!--
-     de.unkrig.ant-contrib - Some contributions to APACHE ANT
+     de.unkrig.antology - Some contributions to APACHE ANT
     
      Copyright (c) 2016, Arno Unkrig
      All rights reserved.
@@ -149,7 +149,7 @@
         <configuration>
 
           <!-- The ANT doclet requires JAVADOC 8. -->
-          <javadocExecutable>c:/Program Files/Java/jdk1.8.0_45/bin/javadoc.exe</javadocExecutable>
+          <javadocExecutable>${jdk.8.home}/bin/javadoc.exe</javadocExecutable>
 
           <quiet>true</quiet>
  
@@ -161,7 +161,7 @@
             <docletArtifact>
               <groupId>de.unkrig</groupId>
               <artifactId>doclet-ant</artifactId>
-              <version>1.0.1</version>
+              <version>1.0.1-SNAPSHOT</version>
             </docletArtifact>
 
 			<!-- The ANT doclet requires "ant.jar" on its classpath: -->
