@@ -1,6 +1,6 @@
 
 /*
- * de.unkrig.ant-contrib - Some contributions to APACHE ANT
+ * antology - Some contributions to APACHE ANT
  *
  * Copyright (c) 2013, Arno Unkrig
  * All rights reserved.
