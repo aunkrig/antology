@@ -1,0 +1,53 @@
+<project>
+
+	<!--
+		This ANT build script is only there to upload ANTDOC to a web server so that they are publicly accessible
+		from the internet.
+	-->
+	<property file="local_build.properties" />
+	<property file="build.properties" />
+
+	<taskdef
+		classpath="target/antology-2.0.0-SNAPSHOT-jar-with-dependencies.jar"
+		resource="de/unkrig/antology/ant.xml"
+	/>
+
+	<target name="publish.antdoc" description="Uploads './antdoc' to a web site">
+
+		<!-- Have the FTP parameters entered/confirmed by the user. -->
+		<swingLookAndFeel system="true"/>
+		<swingDialog title="FTP upload to project site">
+			<text label="Server:"           labelWidth="160" property="ftp.server"    defaultvalue="${ftp.server}"    />
+			<text label="Port (optional):"  labelWidth="160" property="ftp.port"      defaultvalue="${ftp.port}"      />
+			<text label="User ID:"          labelWidth="160" property="ftp.userid"    defaultvalue="${ftp.userid}"    />
+			<text label="Password:"         labelWidth="160" property="ftp.password"  defaultvalue="${ftp.password}" secure="true" focus="true" />
+			<text label="Remote directory:" labelWidth="160" property="ftp.remotedir" defaultvalue="${ftp.remotedir}" />
+			<checkbox text="Use passive FTP"   property="ftp.passive" preselected="true" />
+			<checkbox text="Verbose reporting" property="ftp.verbose" preselected="true" />
+			<separator />
+			<label text="FTP proxy (optional):" />
+			<text label="Proxy server:"              labelWidth="160" property="ftp.proxy.server"   defaultvalue="${ftp.proxy.server}" />
+			<text label="Proxy port (optional):"     labelWidth="160" property="ftp.proxy.port"     defaultvalue="${ftp.proxy.port}"   />
+			<text label="Proxy user ID (optional):"  labelWidth="160" property="ftp.proxy.userid"   defaultvalue="${ftp.proxy.userid}" />
+			<text label="Proxy password (optional):" labelWidth="160" property="ftp.proxy.password" defaultvalue="${ftp.proxy.password}" secure="true" />
+		</swingDialog>
+
+		<!-- Do the upload. -->
+		<ftp2
+			server       ="${ftp.server}"
+			port         ="${ftp.port}"
+			userid       ="${ftp.userid}"
+			password     ="${ftp.password}"
+		    proxyServer  ="${ftp.proxy.server}"
+		    proxyPort    ="${ftp.proxy.port}"
+		    proxyUserid  ="${ftp.proxy.userid}"
+		    proxyPassword="${ftp.proxy.password}"
+			remotedir    ="${ftp.remotedir}"
+			passive      ="${ftp.passive}"
+			verbose      ="${ftp.verbose}"
+			action       ="put"
+		>
+			<fileset dir="target" includes="antdoc/**" />
+		</ftp2>
+	</target>
+</project>
