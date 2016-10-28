@@ -58,8 +58,12 @@ class NslookupTest extends BuildFileTest {
     test2() {
         this.executeTarget("test2");
 
-        this.assertPropertyMatches("addresses",         "\\d+\\.\\d+\\.\\d+\\.\\d+(?:,\\d+\\.\\d+\\.\\d+\\.\\d+)*");
-        this.assertPropertyMatches("address",           "\\d+\\.\\d+\\.\\d+\\.\\d+");
+        final String IPV4_ADDRESS = "(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})";
+        final String IPV6_ADDRESS = "(?:\\p{XDigit}{1,4}(?::\\p{XDigit}{1,4}){7})";
+        final String IPV4_OR_V6_ADDRESS = "(?:" + IPV4_ADDRESS + "|" + IPV6_ADDRESS + ")";
+
+        this.assertPropertyMatches("addresses",         IPV4_OR_V6_ADDRESS + "(?:," + IPV4_OR_V6_ADDRESS + ")*");
+        this.assertPropertyMatches("address",           IPV4_OR_V6_ADDRESS);
         this.assertPropertyMatches("canonicalHostName", "[\\w\\-.]+");
         this.assertPropertyEquals("hostName",           "www.google.com");
     }
