@@ -2275,7 +2275,10 @@ public class FTP2 extends Task implements FTPTaskConfig {
             }
 
             if (verbose) {
-                log("transferring " + filename + " to " + file.getAbsolutePath());
+
+                // Fix for an obvious bug in ANT 1.8.4:
+//              log("transferring " + filename + " to " + file.getAbsolutePath());
+                log("transferring " + file.getAbsolutePath() + " to " + filename);
             }
 
             instream = new BufferedInputStream(new FileInputStream(file));
