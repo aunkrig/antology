@@ -44,6 +44,7 @@ import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.util.ReaderInputStream;
 
 import de.unkrig.commons.io.IoUtil;
+import de.unkrig.commons.io.Readers;
 import de.unkrig.commons.io.WyeReader;
 import de.unkrig.commons.nullanalysis.NotNull;
 import de.unkrig.commons.nullanalysis.NotNullByDefault;
@@ -162,7 +163,7 @@ class TeeFilter extends ProjectComponent implements ChainableReader {
 
             @Override public void
             readAll(Reader in) throws IOException {
-                TeeFilter.this.getProject().setNewProperty(propertyName, IoUtil.readAll(in));
+                TeeFilter.this.getProject().setNewProperty(propertyName, Readers.readAll(in));
             }
         });
     }

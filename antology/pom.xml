@@ -32,7 +32,7 @@
 
   <groupId>de.unkrig</groupId>
   <artifactId>antology</artifactId>
-  <version>2.0.2</version>
+  <version>2.0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -63,22 +63,22 @@
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-lang</artifactId>
-    	<version>1.2.3</version>
+    	<version>1.2.6-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-nullanalysis</artifactId>
-    	<version>1.2.3</version>
+    	<version>1.2.6-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-util</artifactId>
-    	<version>1.2.3</version>
+    	<version>1.2.6-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-net</artifactId>
-    	<version>1.2.3</version>
+    	<version>1.2.6-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>commons-net</groupId>
@@ -177,7 +177,7 @@
             <docletArtifact>
               <groupId>de.unkrig</groupId>
               <artifactId>doclet-ant</artifactId>
-              <version>1.0.4</version>
+              <version>1.0.6-SNAPSHOT</version>
             </docletArtifact>
 
 			<!-- The ANT doclet requires "ant.jar" on its classpath: -->
@@ -227,6 +227,7 @@
       </plugin>
     </plugins>
   </build>
+
   <name>antology</name>
   <description>
     The ANTOLOGY Ant library contributes useful tasks and types to APACHE ANT. It integrates seamlessly with other libraries like ant-contrib.

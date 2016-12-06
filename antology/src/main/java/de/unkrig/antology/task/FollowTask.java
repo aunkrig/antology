@@ -52,7 +52,9 @@ import org.apache.tools.ant.filters.util.ChainReaderHelper;
 import org.apache.tools.ant.types.FilterChain;
 
 import de.unkrig.antology.AbstractUrlConnectionTask;
+import de.unkrig.commons.io.InputStreams;
 import de.unkrig.commons.io.IoUtil;
+import de.unkrig.commons.io.OutputStreams;
 import de.unkrig.commons.lang.AssertionUtil;
 import de.unkrig.commons.lang.protocol.Consumer;
 import de.unkrig.commons.net.UrlConnections;
@@ -85,7 +87,7 @@ class FollowTask extends AbstractUrlConnectionTask {
 
     static { AssertionUtil.enableAssertionsForThisClass(); }
 
-    private OutputStream              out           = IoUtil.NULL_OUTPUT_STREAM;
+    private OutputStream              out           = OutputStreams.DISCARD;
     @Nullable private Charset         charset;
     private final Vector<FilterChain> filterChains  = new Vector<FilterChain>();
     private int                       periodTime    = 3000; // ms
@@ -341,7 +343,7 @@ class FollowTask extends AbstractUrlConnectionTask {
                             this.previousSize = newSize;
                             return is;
                         } else {
-                            return IoUtil.wye(is, IoUtil.lengthWritten(new Consumer<Integer>() {
+                            return InputStreams.wye(is, OutputStreams.lengthWritten(new Consumer<Integer>() {
 
                                 @SuppressWarnings("unqualified-field-access") @Override public void
                                 consume(Integer n) { previousSize += n; }
@@ -428,7 +430,7 @@ class FollowTask extends AbstractUrlConnectionTask {
 
     private void
     assertOutIsDefault() {
-        if (this.out != IoUtil.NULL_OUTPUT_STREAM) {
+        if (this.out != OutputStreams.DISCARD) {
             throw new BuildException("Only one of 'outputFile=...', 'stdout=true' and 'stderr=true' allowed");
         }
     }
