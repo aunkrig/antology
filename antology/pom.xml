@@ -63,22 +63,22 @@
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-lang</artifactId>
-    	<version>1.2.6-SNAPSHOT</version>
+    	<version>1.2.7</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-nullanalysis</artifactId>
-    	<version>1.2.6-SNAPSHOT</version>
+    	<version>1.2.7</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-util</artifactId>
-    	<version>1.2.6-SNAPSHOT</version>
+    	<version>1.2.7</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-net</artifactId>
-    	<version>1.2.6-SNAPSHOT</version>
+    	<version>1.2.7</version>
     </dependency>
     <dependency>
     	<groupId>commons-net</groupId>
