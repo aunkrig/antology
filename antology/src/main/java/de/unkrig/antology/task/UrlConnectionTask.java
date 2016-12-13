@@ -239,7 +239,7 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
                             String value = values.get(0);
                             assert value != null;
 
-                            // A header 'Content-Type' exists, verify that it is 'multipart/for-data'.
+                            // A header 'Content-Type' exists, verify that it is 'multipart/form-data'.
                             ParametrizedHeaderValue phv = new ParametrizedHeaderValue(value);
                             if (!"multipart/form-data".equalsIgnoreCase(phv.getToken())) {
                                 throw new BuildException("Invalid content type '" + value + "'");
