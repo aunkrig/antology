@@ -152,7 +152,7 @@ class ForEach2Task extends Task {
     /**
      * The default value for the {@link #setDelimiter(String)}.
      */
-    public static final String DEFAULT_DELIMITER = ",";
+    public static final String DEFAULT_DELIMITER = ", \t\r\n";
 
     @Nullable private String      param;
     private String                delimiter = ForEach2Task.DEFAULT_DELIMITER;
