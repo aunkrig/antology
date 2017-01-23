@@ -29,8 +29,12 @@ package de.unkrig.antology.task;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.PasswordAuthentication;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -96,7 +100,8 @@ class SetAuthenticatorTask extends Task {
         /**
          * Hostname of the site or proxy.
          */
-        public void setRequestingHost(Regex regex) { this.requestingHost = regex; }
+        public void
+        setRequestingHost(Regex regex) { this.requestingHost = regex; }
 
         /**
          * {@link InetAddress} of the site.
@@ -107,28 +112,33 @@ class SetAuthenticatorTask extends Task {
         /**
          * Port number for the requested connection.
          */
-        public void setRequestingPort(Regex regex) { this.requestingPort = regex; }
+        public void
+        setRequestingPort(Regex regex) { this.requestingPort = regex; }
 
         /**
          * The protocol that's requesting the connection.
          */
-        public void setRequestingProtocol(Regex regex) { this.requestingProtocol = regex; }
+        public void
+        setRequestingProtocol(Regex regex) { this.requestingProtocol = regex; }
 
         /**
          * The prompt string given by the requestor (the "realm" for <a href="http://www.ietf.org/rfc/rfc2617.txt">HTTP
          * authentication</a>).
          */
-        public void setRequestingPrompt(Regex regex) { this.requestingPrompt = regex; }
+        public void
+        setRequestingPrompt(Regex regex) { this.requestingPrompt = regex; }
 
         /**
          * The scheme of the requestor.
          */
-        public void setRequestingScheme(Regex regex) { this.requestingScheme = regex; }
+        public void
+        setRequestingScheme(Regex regex) { this.requestingScheme = regex; }
 
         /**
          * The URL that resulted in this request for authentication.
          */
-        public void setRequestingURL(Regex regex) { this.requestingUrl = regex; }
+        public void
+        setRequestingURL(Regex regex) { this.requestingUrl = regex; }
 
         /**
          * Whether the requestor is a Proxy or a Server.
@@ -139,68 +149,85 @@ class SetAuthenticatorTask extends Task {
          *   <dd>Entity requesting authentication is a HTTP origin server.</dd>
          * </dl>
          */
-        public void setRequestorType(Regex regex) { this.requestorType = regex; }
+        public void
+        setRequestorType(Regex regex) { this.requestorType = regex; }
 
         /**
          * The user name to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
          * <em>not</em> configuring a user name.
          */
-        public void setUserName(String userName) { if (!"-".equals(userName)) this.userName = userName; }
+        public void
+        setUserName(String userName) {
+            if (!userName.isEmpty() && !"-".equals(userName)) this.userName = userName;
+        }
 
         /**
          * The password to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
          * <em>not</em> configuring a password.
          */
-        public void setPassword(String password) { if (!"-".equals(password)) this.password = password.toCharArray(); }
+        public void
+        setPassword(String password) {
+            if (!password.isEmpty() && !"-".equals(password)) this.password = password.toCharArray();
+        }
     }
 
-    @Override public void
-    execute() throws BuildException {
+    class MyAuthenticator extends Authenticator {
 
-        Authenticator.setDefault(new Authenticator() {
+        private final List<CredentialsElement>            credentials = new ArrayList<CredentialsElement>();
+        private final Map<Object, PasswordAuthentication> cache       = new HashMap<Object, PasswordAuthentication>();
 
-            @Override @Nullable protected PasswordAuthentication
-            getPasswordAuthentication() {
+        void
+        addCredentials(Collection<CredentialsElement> credentials) { this.credentials.addAll(credentials); }
 
-                String userName;
-                char[] password;
-                if (SetAuthenticatorTask.this.credentials.isEmpty()) {
+        @Override @Nullable protected PasswordAuthentication
+        getPasswordAuthentication() {
 
-                    // Handle the special case with NO "<credentials>" subelement: ALWAYS ask for both user name and
-                    // password.
-                    userName = null;
-                    password = null;
-                } else {
+            String userName;
+            char[] password;
+            Object key;
+            if (this.credentials.isEmpty()) {
 
-                    // Search for the first applicable "<credentials>" subelement.
-                    COMPUTE_CREDENTIALS: {
-                        for (CredentialsElement ce : SetAuthenticatorTask.this.credentials) {
+                // Handle the special case with NO "<credentials>" subelement: ALWAYS ask for both user name and
+                // password.
+                userName = null;
+                password = null;
+                key = "global";
+            } else {
 
-                            if (
-                                this.matches(ce.requestingHost,        this.getRequestingHost())
-                                && this.matches(ce.requestingSite,     this.getRequestingSite())
-                                && this.matches(ce.requestingPort,     this.getRequestingPort())
-                                && this.matches(ce.requestingProtocol, this.getRequestingProtocol())
-                                && this.matches(ce.requestingPrompt,   this.getRequestingPrompt())
-                                && this.matches(ce.requestingScheme,   this.getRequestingScheme())
-                                && this.matches(ce.requestingUrl,      this.getRequestingURL())
-                                && this.matches(ce.requestorType,      this.getRequestorType())
-                            ) {
-                                userName = ce.userName;
-                                password = ce.password;
-                                break COMPUTE_CREDENTIALS;
-                            }
+                // Search for the first applicable "<credentials>" subelement.
+                COMPUTE_CREDENTIALS: {
+                    for (CredentialsElement ce : this.credentials) {
+
+                        if (
+                            this.matches(ce.requestingHost,        this.getRequestingHost())
+                            && this.matches(ce.requestingSite,     this.getRequestingSite())
+                            && this.matches(ce.requestingPort,     this.getRequestingPort())
+                            && this.matches(ce.requestingProtocol, this.getRequestingProtocol())
+                            && this.matches(ce.requestingPrompt,   this.getRequestingPrompt())
+                            && this.matches(ce.requestingScheme,   this.getRequestingScheme())
+                            && this.matches(ce.requestingUrl,      this.getRequestingURL())
+                            && this.matches(ce.requestorType,      this.getRequestorType())
+                        ) {
+                            userName = ce.userName;
+                            password = ce.password;
+                            key      = ce;
+                            break COMPUTE_CREDENTIALS;
                         }
-
-                        // No applicable "<credentials>" subelement; give up.
-                        return null;
                     }
-                }
 
-                if (userName != null && password != null) {
-                    return new PasswordAuthentication(userName, password);
+                    // No applicable "<credentials>" subelement; give up.
+                    return null;
                 }
+            }
 
+            synchronized (this.cache) {
+                PasswordAuthentication result = this.cache.get(key);
+                if (result != null) return result;
+            }
+
+            if (userName == null || password == null) {
+
+                // The user name and/or the password are missing, so prompt the user for the missing element(s).
                 JTextField userNameField = new JTextField();
                 if (userName != null) {
                     userNameField.setText(userName);
@@ -217,14 +244,29 @@ class SetAuthenticatorTask extends Task {
                     if (userName != null) SwingUtil.focussify(passwordField);
                 }
 
+                String message;
+                {
+                    message = "Authenticating to ";
+
+                    String requestingPrompt = this.getRequestingPrompt();
+                    if (requestingPrompt != null) message += "'" + requestingPrompt + "' on ";
+
+                    message += "'" + this.getRequestingHost() + ":" + this.getRequestingPort() + "'";
+
+                    if (this.getRequestorType() == RequestorType.PROXY) message += " proxy";
+
+                    URL requestingURL = this.getRequestingURL();
+                    if (requestingURL != null) {
+                        message += " / " + SetAuthenticatorTask.truncate(requestingURL.toString(), 100);
+                    }
+
+                    message += ":";
+                }
+
                 if (JOptionPane.showOptionDialog(
                     null,                                     // parentComponent
                     new Object[] {                            // message
-                        new JLabel("Authenticating to '" + this.getRequestingPrompt() + "' on '" + (
-                            this.getRequestorType() == RequestorType.PROXY
-                            ? this.getRequestingHost() + ":" + this.getRequestingPort()
-                            : SetAuthenticatorTask.truncate(this.getRequestingURL().toString(), 100)
-                        ) + "'"),
+                        new JLabel(message),
                         new JLabel("User ID:"),
                         userNameField,
                         new JLabel("Password:"),
@@ -246,27 +288,50 @@ class SetAuthenticatorTask extends Task {
 
                 userName = userNameField.getText();
                 password = passwordField.getPassword();
-
-                return new PasswordAuthentication(userName, password);
             }
 
-            private boolean
-            matches(@Nullable Regex regex, @Nullable Object subject) {
+            PasswordAuthentication result = new PasswordAuthentication(userName, password);
 
-                boolean result = regex == null || (
-                    subject != null
-                    && regex.pattern.matcher(subject.toString()).matches()
-                );
-
-                SetAuthenticatorTask.this.log(
-                    "pattern=" + regex + ", subject=" + subject + ", result=" + result,
-                    Project.MSG_DEBUG
-                );
-
-                return result;
+            synchronized (this.cache) {
+                this.cache.put(key, result);
             }
-        });
+
+            return result;
+        }
+
+        private boolean
+        matches(@Nullable Regex regex, @Nullable Object subject) {
+
+            boolean result = regex == null || (
+                subject != null
+                && regex.pattern.matcher(subject.toString()).matches()
+            );
+
+            SetAuthenticatorTask.this.log(
+                "pattern=" + regex + ", subject=" + subject + ", result=" + result,
+                Project.MSG_DEBUG
+            );
+
+            return result;
+        }
     }
+
+    @Override public void
+    execute() {
+
+        synchronized (SetAuthenticatorTask.class) {
+            MyAuthenticator ma = SetAuthenticatorTask.myAuthenticator;
+            if (ma == null) {
+                Authenticator.setDefault((ma = (SetAuthenticatorTask.myAuthenticator = new MyAuthenticator())));
+            }
+            ma.addCredentials(this.credentials);
+        }
+    }
+
+    /**
+     * Our singleton authenticator.
+     */
+    @Nullable private static MyAuthenticator myAuthenticator;
 
     /**
      * @return {@code s} iff not longer than {@code lengthLimit}, otherwise a truncated version no longer than {@code
