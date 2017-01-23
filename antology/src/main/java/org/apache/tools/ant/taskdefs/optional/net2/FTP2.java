@@ -93,7 +93,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Authenticator;
+import java.net.Authenticator.RequestorType;
 import java.net.InetAddress;
+import java.net.PasswordAuthentication;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -124,6 +128,8 @@ import org.apache.tools.ant.util.FileUtils;
 import org.apache.tools.ant.util.RetryHandler;
 import org.apache.tools.ant.util.Retryable;
 import org.apache.tools.ant.util.VectorSet;
+
+import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
  * Basic FTP client. Performs the following actions:
@@ -1790,12 +1796,6 @@ public class FTP2 extends Task implements FTPTaskConfig {
         if (server == null) {
             throw new BuildException("server attribute must be set!");
         }
-        if (userid == null) {
-            throw new BuildException("userid attribute must be set!");
-        }
-        if (password == null) {
-            throw new BuildException("password attribute must be set!");
-        }
 
         if ((action == LIST_FILES) && (listing == null)) {
             throw new BuildException("listing attribute must be set for list "
@@ -2570,52 +2570,118 @@ public class FTP2 extends Task implements FTPTaskConfig {
 
             ftp.setRemoteVerificationEnabled(enableRemoteVerification);
 
-            if (proxyServer != null) {
+            if (this.proxyServer != null) {
 
                 // Connect through an FTP proxy.
-                log(
-                    "Opening FTP connection to proxy server \"" + proxyServer + "\" on port " + proxyPort,
+
+                // Get FTP proxy credentials (optional).
+                String proxyUserId;
+                char[] proxyPassword;
+                {
+                    PasswordAuthentication pa = FTP2.getPasswordAuthentication(
+                        this.proxyServer,
+                        this.proxyPort,
+                        this.proxyUserid,
+                        this.proxyPassword,
+                        RequestorType.PROXY
+                    );
+                    if (pa == null) {
+                        proxyUserId   = null;
+                        proxyPassword = null;
+                    } else {
+                        proxyUserId = pa.getUserName();
+                        if (proxyUserId == null) throw new BuildException("Proxy user ID missing");
+                        proxyPassword = pa.getPassword();
+                        if (proxyPassword == null) throw new BuildException("Proxy password missing");
+                    }
+                }
+
+                // Get remote FTP server credentials (mandatory).
+                String serverUserId;
+                char[] serverPassword;
+                {
+                    PasswordAuthentication pa = FTP2.getPasswordAuthentication(
+                        this.server,
+                        this.port,
+                        this.userid,
+                        this.password,
+                        RequestorType.SERVER
+                    );
+                    if (pa == null) throw new BuildException("User ID and password missing");
+                    serverUserId = pa.getUserName();
+                    if (serverUserId == null) throw new BuildException("User ID missing");
+                    serverPassword = pa.getPassword();
+                    if (serverPassword == null) throw new BuildException("Password missing");
+                }
+
+                // Connect to the FTP proxy.
+                this.log(
+                    "Opening FTP connection to proxy server \"" + this.proxyServer + "\" on port " + this.proxyPort,
                     Project.MSG_VERBOSE
                 );
-                ftp.connect(proxyServer, proxyPort);
+                ftp.connect(this.proxyServer, this.proxyPort);
                 if (!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
                     throw new BuildException("FTP connection to proxy server failed: " + ftp.getReplyString());
                 }
-                log("connected to proxy server", Project.MSG_VERBOSE);
+                this.log("connected to proxy server", Project.MSG_VERBOSE);
 
-                if (!ftp.login(proxyUserid, proxyPassword)) {
-                    log("logging in to FTP proxy server", Project.MSG_VERBOSE);
-                    throw new BuildException("Could not login to FTP proxy server");
+                // Authenticate with the FTP proxy (optional).
+                if (proxyUserId != null) {
+                    this.log("logging in to FTP proxy server", Project.MSG_VERBOSE);
+                    if (!ftp.login(proxyUserId, new String(proxyPassword))) {
+                        throw new BuildException("Could not login to FTP proxy server");
+                    }
                 }
 
-                log("logging in to FTP server", Project.MSG_VERBOSE);
-                String userid = this.userid + '@' + server;
-                if (port != DEFAULT_FTP_PORT) userid += ":" + port;
+                // Log in to the remote FTP server.
+                this.log("logging in to FTP server", Project.MSG_VERBOSE);
+                String userid2 = serverUserId + '@' + this.server;
+                if (this.port != FTP2.DEFAULT_FTP_PORT) userid2 += ":" + this.port;
                 if (
-                    account == null
-                    ? !ftp.login(userid, password)
-                    : !ftp.login(userid, password, account)
-                ) {
-                    throw new BuildException("Could not login to FTP server");
-                }
+                    this.account == null
+                    ? !ftp.login(userid2, new String(serverPassword))
+                    : !ftp.login(userid2, new String(serverPassword), this.account)
+                ) throw new BuildException("Could not login to FTP server");
+                this.log("login succeeded", Project.MSG_VERBOSE);
             } else {
 
                 // Direct connection to remote FTP server.
-                log("Opening FTP connection to " + this.server, Project.MSG_VERBOSE);
-                ftp.connect(server, port);
-                if (!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
-                    throw new BuildException("FTP connection failed: "
-                            + ftp.getReplyString());
-                }
-                log("connected", Project.MSG_VERBOSE);
-                log("logging in to FTP server", Project.MSG_VERBOSE);
-                if ((this.account != null && !ftp.login(userid, password, account))
-                        || (this.account == null && !ftp.login(userid, password))) {
-                    throw new BuildException("Could not login to FTP server");
-                }
-            }
 
-            log("login succeeded", Project.MSG_VERBOSE);
+                // Get remote FTP server credentials (mandatory).
+                String serverUserId;
+                char[] serverPassword;
+                {
+                    PasswordAuthentication pa = FTP2.getPasswordAuthentication(
+                        this.server,
+                        this.port,
+                        this.userid,
+                        this.password,
+                        RequestorType.SERVER
+                    );
+                    if (pa == null) throw new BuildException("User ID and password missing");
+                    serverUserId = pa.getUserName();
+                    if (serverUserId == null) throw new BuildException("User ID missing");
+                    serverPassword = pa.getPassword();
+                    if (serverPassword == null) throw new BuildException("Password missing");
+                }
+
+                // Connect to the remote FTP server.
+                this.log("Opening FTP connection to " + this.server, Project.MSG_VERBOSE);
+                ftp.connect(this.server, this.port);
+                if (!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
+                    throw new BuildException("FTP connection failed: " + ftp.getReplyString());
+                }
+                this.log("connected", Project.MSG_VERBOSE);
+
+                // Log in to the remote FTP server.
+                this.log("logging in to FTP server", Project.MSG_VERBOSE);
+                if (
+                    this.account == null
+                    ? !ftp.login(serverUserId, new String(serverPassword))
+                    : !ftp.login(serverUserId, new String(serverPassword), this.account)
+                ) throw new BuildException("Could not login to FTP server");
+                this.log("login succeeded", Project.MSG_VERBOSE);
+            }
 
             if (binary) {
                 ftp.setFileType(org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE);
@@ -2725,6 +2791,38 @@ public class FTP2 extends Task implements FTPTaskConfig {
         }
     }
 
+    @Nullable private static PasswordAuthentication
+    getPasswordAuthentication(
+        String           host,
+        int              port,
+        @Nullable String defaultUserId,
+        @Nullable String defaultPassword,
+        RequestorType    requestorType
+    ) {
+
+        if (defaultUserId != null) {
+            if (defaultPassword == null) throw new BuildException("Password missing");
+            return new PasswordAuthentication(defaultUserId, defaultPassword.toCharArray());
+        }
+
+        InetAddress addr;
+        try {
+            addr = InetAddress.getByName(host);
+        } catch (UnknownHostException uhe) {
+            throw new BuildException(uhe);
+        }
+
+        return Authenticator.requestPasswordAuthentication(
+            host,         // host
+            addr,         // addr
+            port,         // port
+            "ftp",        // protocol
+            "FTP",        // prompt
+            null,         // scheme
+            null,         // url
+            requestorType // reqType
+        );
+    }
 
     /**
      * an action to perform, one of
