@@ -42,4 +42,7 @@ class Regex {
 
     public
     Regex(String regex) { this.pattern = Pattern.compile(regex); }
+
+    @Override public String
+    toString() { return this.pattern.toString(); }
 }
