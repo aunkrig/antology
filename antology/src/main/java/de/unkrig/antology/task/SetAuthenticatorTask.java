@@ -26,15 +26,23 @@
 
 package de.unkrig.antology.task;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -48,6 +56,9 @@ import org.apache.tools.ant.Task;
 
 import de.unkrig.antology.util.Regex;
 import de.unkrig.antology.util.SwingUtil;
+import de.unkrig.commons.io.IoUtil;
+import de.unkrig.commons.lang.ObjectUtil;
+import de.unkrig.commons.lang.protocol.ConsumerWhichThrows;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -59,9 +70,56 @@ import de.unkrig.commons.nullanalysis.Nullable;
  */
 public
 class SetAuthenticatorTask extends Task {
+    
+    public enum CacheMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
+    
+    public enum StoreMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
 
+    /**
+     * Stores username-password-pairs, persistently or not.
+     */
+    private
+    interface CredentialsStore {
+
+        /**
+         * @return The least recently {@link #put(String, String, char[]) put} <var>userName</var> for the
+         *         <var>key</var>
+         */
+        @Nullable String
+        getUserName(String key);
+        
+        /**
+         * @return The least recently {@link #put(String, String, char[]) put} <var>password</var> for the
+         *         <var>key</var>
+         */
+        @Nullable char[]
+        getPassword(String key);
+
+        void
+        put(String key, String userName, @Nullable char[] password);
+    }
+
+    public static final File      CREDENTIALS_STORE_FILE = new File(
+        System.getProperty("user.home"),
+        ".antology_setAuthenticator_credentials"
+    );
+
+    private CacheMode                      cacheMode   = CacheMode.USER_NAMES_AND_PASSWORDS;
+    private StoreMode                      storeMode   = StoreMode.NONE;
     private final List<CredentialsElement> credentials = new ArrayList<CredentialsElement>();
 
+    /**
+     * @ant.defaultValue USER_NAMES_AND_PASSWORDS
+     */
+    public void
+    setCache(CacheMode value) { this.cacheMode = value; }
+    
+    /**
+     * @ant.defaultValue NONE
+     */
+    public void
+    setStore(StoreMode value) { this.storeMode = value; }
+    
     /**
      * Every time a server requests user name/password authentication, the {@code <credentials>} subelements are
      * checked, and the <b>first</b> that matches the request determines the user name and password.
@@ -169,6 +227,29 @@ class SetAuthenticatorTask extends Task {
         setPassword(String password) {
             if (!password.isEmpty() && !"-".equals(password)) this.password = password.toCharArray();
         }
+
+        // This is used as the key for the "cache" and the "store".
+        public String
+        key() {
+            String sep = "\0";
+            return (
+                this.requestingHost
+                + sep
+                + this.requestingSite
+                + sep
+                + this.requestingPort
+                + sep
+                + this.requestingProtocol
+                + sep
+                + this.requestingPrompt
+                + sep
+                + this.requestingScheme
+                + sep
+                + this.requestingUrl
+                + sep
+                + this.requestorType
+            );
+        }
     }
 
     class MyAuthenticator extends Authenticator {
@@ -184,7 +265,7 @@ class SetAuthenticatorTask extends Task {
 
             String userName;
             char[] password;
-            Object key;
+            String key;
             if (this.credentials.isEmpty()) {
 
                 // Handle the special case with NO "<credentials>" subelement: ALWAYS ask for both user name and
@@ -210,7 +291,7 @@ class SetAuthenticatorTask extends Task {
                         ) {
                             userName = ce.userName;
                             password = ce.password;
-                            key      = ce;
+                            key      = ce.key();
                             break COMPUTE_CREDENTIALS;
                         }
                     }
@@ -220,9 +301,43 @@ class SetAuthenticatorTask extends Task {
                 }
             }
 
-            synchronized (this.cache) {
-                PasswordAuthentication result = this.cache.get(key);
-                if (result != null) return result;
+            if (userName == null || password == null) {
+                switch (SetAuthenticatorTask.this.cacheMode) {
+                
+                case NONE:
+                    ;
+                    
+                case USER_NAMES:
+                    synchronized (this.cache) {
+                        PasswordAuthentication result = this.cache.get(key);
+                        if (result != null) userName = result.getUserName();
+                    }
+                    break;
+                    
+                case USER_NAMES_AND_PASSWORDS:
+                    synchronized (this.cache) {
+                        PasswordAuthentication result = this.cache.get(key);
+                        if (result != null) return result;
+                    }
+                    break;
+                }
+            }
+            
+            if (userName == null || password == null) {
+                switch (SetAuthenticatorTask.this.storeMode) {
+                
+                case NONE:
+                    ;
+                    
+                case USER_NAMES:
+                    userName = this.passwordStore.getUserName(key);
+                    break;
+                    
+                case USER_NAMES_AND_PASSWORDS:
+                    userName = this.passwordStore.getUserName(key);
+                    password = this.passwordStore.getPassword(key);
+                    break;
+                }
             }
 
             if (userName == null || password == null) {
@@ -292,12 +407,118 @@ class SetAuthenticatorTask extends Task {
 
             PasswordAuthentication result = new PasswordAuthentication(userName, password);
 
-            synchronized (this.cache) {
-                this.cache.put(key, result);
+            if (SetAuthenticatorTask.this.cacheMode != CacheMode.NONE) {
+                synchronized (this.cache) {
+                    this.cache.put(key, result);
+                }
+            }
+            
+            switch (SetAuthenticatorTask.this.storeMode) {
+            
+            case NONE:
+                ;
+                break;
+                
+            case USER_NAMES:
+                this.passwordStore.put(key, userName, null);
+                break;
+                
+            case USER_NAMES_AND_PASSWORDS:
+                this.passwordStore.put(key, userName, password);
+                break;
             }
 
             return result;
         }
+
+        private final CredentialsStore
+        passwordStore = new CredentialsStore() {
+
+            @Nullable Properties properties;
+            
+            @Override @Nullable public String
+            getUserName(String key) { return getProperties().getProperty(key + ".userName"); }
+
+            @Override @Nullable public char[]
+            getPassword(String key) {  return toCharArray(getProperties().getProperty(key + ".password")); }
+
+            /**
+             * Stores the <var>userName</var> and the <var>password</var> in the credentials store.
+             * If the <var>password</var> is {@code null}, then this methods <em>erases</em> the password from the
+             * credentials store (but still stores the <var>userName</var>!).
+             */
+            @Override public synchronized void
+            put(String key, String userName, @Nullable char[] password) {
+                
+                String userNamePropertyName = key + ".userName";
+                String passwordPropertyName = key + ".password";
+                
+                Properties p = getProperties();
+
+                String oldUserName = p.getProperty(userNamePropertyName);
+                char[] oldPassword = toCharArray(p.getProperty(passwordPropertyName));
+                
+                if (
+                    userName.equals(oldUserName)
+                    && (password == null || Arrays.equals(oldPassword, password))
+                ) return;
+                
+                p.setProperty(userNamePropertyName, userName);
+                p.setProperty(passwordPropertyName, toString(password));
+                
+                storeProperties();
+            }
+
+            @Nullable private char[]
+            toCharArray(@Nullable String subject) { return subject == null ? null : subject.toCharArray(); }
+            
+            @Nullable private String
+            toString(@Nullable char[] subject) { return subject == null ? null : new String(subject); }
+
+            private synchronized Properties
+            getProperties() {
+                
+                Properties p = this.properties;
+                if (p != null) return p;
+                
+                p = new Properties();
+                
+                try (InputStream is = new FileInputStream(CREDENTIALS_STORE_FILE)) {
+                    p.load(is);
+                } catch (FileNotFoundException fnfe) {
+                    ;
+                } catch (IOException ioe) {
+                    throw new BuildException("Loading password store", ioe);
+                }
+                
+                return (this.properties = p);
+            }
+            
+            private synchronized void
+            storeProperties() {
+                
+                final Properties p = this.properties;
+                assert p != null;
+
+                try {
+                    IoUtil.outputFileOutputStream(
+                        CREDENTIALS_STORE_FILE,                                // file
+                        new ConsumerWhichThrows<OutputStream, IOException>() { // delegate
+
+                            @Override public void
+                            consume(OutputStream os) throws IOException {
+                                p.store(os, " The credentials store of the <setAuthenticator> task of http://antology.unkrig.de.");
+                            }
+                        },
+                        false                                                  // createMissingParentDirectories
+                    );
+                } catch (IOException ioe) {
+                    throw new BuildException("Updating the credentials store", ioe);
+                }
+                
+                this.properties = p;
+            }
+        };
 
         private boolean
         matches(@Nullable Regex regex, @Nullable Object subject) {
