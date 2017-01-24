@@ -110,8 +110,8 @@ class SetAuthenticatorTask extends Task {
      * A {@code <credentials>} element matches iff the requesting host, site, port, protocol, url, scheme and/or
      * requestor type match the respective attributes.
      * <p>
-     *   If no {@link #setUserName(String) user name} and/or no {@link #setPassword(String) password} are configured,
-     *   then the user is prompted for the missing user name and/or password.
+     *   If no {@link #setUserName(String) user name} and/or no {@link #setPassword(SecureString) password} are
+     *   configured, then the user is prompted for the missing user name and/or password.
      * </p>
      */
     public static
@@ -198,7 +198,11 @@ class SetAuthenticatorTask extends Task {
          */
         public void
         setPassword(SecureString password) {
-            if (password.length() > 0 && !"-".equals(password)) this.password = password;
+            if (password.length() == 0 || (password.length() == 1 && password.charAt(0) == '-')) {
+                this.password = null;
+            } else {
+                this.password = password;
+            }
         }
 
         // This is used as the key for the "cache" and the "store".
