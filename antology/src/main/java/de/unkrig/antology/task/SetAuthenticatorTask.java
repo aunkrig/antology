@@ -26,13 +26,16 @@
 
 package de.unkrig.antology.task;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.PasswordAuthentication;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -115,7 +118,7 @@ class SetAuthenticatorTask extends Task {
      * </p>
      */
     public static
-    class CredentialsElement extends ProjectComponent {
+    class CredentialsElement extends ProjectComponent implements Closeable {
 
         @Nullable private Regex        requestingHost;
         @Nullable private Regex        requestingSite;
@@ -127,6 +130,14 @@ class SetAuthenticatorTask extends Task {
         @Nullable private Regex        requestorType;
         @Nullable private String       userName;
         @Nullable private SecureString password;
+
+        @Override protected void
+        finalize() { this.close(); }
+
+        @Override public void
+        close() {
+            if (this.password != null) this.password.close();
+        }
 
         /**
          * Hostname of the site or proxy.
@@ -192,17 +203,25 @@ class SetAuthenticatorTask extends Task {
             if (!userName.isEmpty() && !"-".equals(userName)) this.userName = userName;
         }
 
+        public @Nullable CharSequence
+        getPassword() { return this.password; }
+
         /**
          * The password to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
          * <em>not</em> configuring a password.
          */
         public void
-        setPassword(SecureString password) {
-            if (password.length() == 0 || (password.length() == 1 && password.charAt(0) == '-')) {
-                this.password = null;
-            } else {
-                this.password = password;
-            }
+        setPassword(
+            @Nullable SecureString password // Callee takes ownership!
+        ) {
+            if (password != null && (password.length() == 0 || (password.length() == 1 && password.charAt(0) == '-'))) {
+                password.close();
+                password = null;
+            } 
+
+            if (this.password != null) this.password.close();
+            
+            this.password = password;
         }
 
         // This is used as the key for the "cache" and the "store".
@@ -237,12 +256,14 @@ class SetAuthenticatorTask extends Task {
         private final UserNamePasswordStore passwordStore;
         
         public
-        MyAuthenticator() throws IOException {
+        MyAuthenticator() throws IOException, GeneralSecurityException {
             
-            this.passwordStore = UserNamePasswordStores.propertiesUserNamePasswordStore(
-                UserNamePasswordStores.propertiesFileSecureProperties(
-                    CREDENTIALS_STORE_FILE,
-                    CREDENTIALS_STORE_COMMENTS
+            this.passwordStore = UserNamePasswordStores.encryptPasswords(
+                UserNamePasswordStores.propertiesUserNamePasswordStore(
+                    UserNamePasswordStores.propertiesFileSecureProperties(
+                        CREDENTIALS_STORE_FILE,
+                        CREDENTIALS_STORE_COMMENTS
+                    )
                 )
             );
         }
@@ -253,12 +274,15 @@ class SetAuthenticatorTask extends Task {
             NEW_CREDENTIALS:
             for (CredentialsElement newCe : credentials) {
                 for (CredentialsElement oldCe : this.credentials) {
+                    
+                    // Avoid adding duplicate entries.
                     if (
                         newCe.key().equals(oldCe.key())
                         && ObjectUtil.equals(newCe.userName, oldCe.userName)
-                        && ObjectUtil.equals(newCe.password, oldCe.password)
+                        && ObjectUtil.equals(newCe.getPassword(), oldCe.getPassword())
                     ) continue NEW_CREDENTIALS;
                 }
+                
                 this.credentials.add(newCe);
             }
         }
@@ -276,7 +300,7 @@ class SetAuthenticatorTask extends Task {
                 // password.
                 userName = null;
                 password = null;
-                key = "global";
+                key      = "global";
             } else {
 
                 // Search for the first applicable "<credentials>" subelement.
@@ -294,7 +318,7 @@ class SetAuthenticatorTask extends Task {
                             && this.matches(ce.requestorType,      this.getRequestorType())
                         ) {
                             userName = ce.userName;
-                            password = ce.password;
+                            password = SecureString.from(ce.getPassword());
                             key      = ce.key();
                             break COMPUTE_CREDENTIALS;
                         }
@@ -310,6 +334,7 @@ class SetAuthenticatorTask extends Task {
                 
                 case NONE:
                     ;
+                    break;
                     
                 case USER_NAMES:
                     synchronized (this.cache) {
@@ -327,21 +352,13 @@ class SetAuthenticatorTask extends Task {
                 }
             }
             
-            if (userName == null || password == null) {
-                switch (SetAuthenticatorTask.this.storeMode) {
-                
-                case NONE:
-                    ;
-                    
-                case USER_NAMES:
-                    userName = this.passwordStore.getUserName(key);
-                    break;
-                    
-                case USER_NAMES_AND_PASSWORDS:
-                    userName = this.passwordStore.getUserName(key);
-                    password = this.passwordStore.getPassword(key);
-                    break;
-                }
+            if (userName == null) {
+                userName = this.passwordStore.getUserName(key);
+                if (password != null) password.close();
+                password = this.passwordStore.getPassword(key);
+            } else
+            if (userName.equals(this.passwordStore.getUserName(key)) && password == null) {
+                password = this.passwordStore.getPassword(key);
             }
 
             if (userName == null || password == null) {
@@ -406,11 +423,17 @@ class SetAuthenticatorTask extends Task {
                 }
 
                 userName = userNameField.getText();
+                if (password != null) password.close();
                 password = new SecureString(passwordField.getPassword());
             }
 
-            PasswordAuthentication result = new PasswordAuthentication(userName, password.extract());
-
+            PasswordAuthentication result;
+            {
+                char[] passwordCa = password.toCharArray();
+                result = new PasswordAuthentication(userName, passwordCa);
+                Arrays.fill(passwordCa, '\0');
+            }
+            
             if (SetAuthenticatorTask.this.cacheMode != CacheMode.NONE) {
                 synchronized (this.cache) {
                     this.cache.put(key, result);
@@ -422,11 +445,11 @@ class SetAuthenticatorTask extends Task {
                 switch (SetAuthenticatorTask.this.storeMode) {
                 
                 case NONE:
-                    ;
+                    this.passwordStore.remove(key);
                     break;
                     
                 case USER_NAMES:
-                    this.passwordStore.put(key, userName, null);
+                    this.passwordStore.put(key, userName);
                     break;
                     
                 case USER_NAMES_AND_PASSWORDS:
@@ -437,6 +460,8 @@ class SetAuthenticatorTask extends Task {
                 throw ExceptionUtil.wrap("Saving password store", ioe, IllegalStateException.class);
             }
 
+            password.close();
+            
             return result;
         }
 
@@ -467,8 +492,8 @@ class SetAuthenticatorTask extends Task {
             if (ma == null) {
                 try {
                     Authenticator.setDefault((ma = (SetAuthenticatorTask.myAuthenticator = new MyAuthenticator())));
-                } catch (IOException ioe) {
-                    throw ExceptionUtil.wrap("Initializing authenticator", ioe, BuildException.class);
+                } catch (Exception e) {
+                    throw ExceptionUtil.wrap("Initializing authenticator", e, BuildException.class);
                 }
             }
             
