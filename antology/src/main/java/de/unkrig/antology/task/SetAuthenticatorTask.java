@@ -55,7 +55,7 @@ import de.unkrig.antology.util.Regex;
 import de.unkrig.antology.util.SwingUtil;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
-import de.unkrig.commons.lang.security.SecureString;
+import de.unkrig.commons.lang.security.DestroyableString;
 import de.unkrig.commons.lang.security.UserNamePasswordStore;
 import de.unkrig.commons.lang.security.UserNamePasswordStores;
 import de.unkrig.commons.nullanalysis.Nullable;
@@ -125,7 +125,7 @@ class SetAuthenticatorTask extends Task {
      * A {@code <credentials>} element matches iff the requesting host, site, port, protocol, url, scheme and/or
      * requestor type match the respective attributes.
      * <p>
-     *   If no {@link #setUserName(String) user name} and/or no {@link #setPassword(SecureString) password} are
+     *   If no {@link #setUserName(String) user name} and/or no {@link #setPassword(DestroyableString) password} are
      *   configured, then the user is prompted for the missing user name and/or password.
      * </p>
      */
@@ -141,14 +141,14 @@ class SetAuthenticatorTask extends Task {
         @Nullable private Regex        requestingUrl;
         @Nullable private Regex        requestorType;
         @Nullable private String       userName;
-        @Nullable private SecureString password;
+        @Nullable private DestroyableString password;
 
         @Override protected void
         finalize() { this.close(); }
 
         @Override public void
         close() {
-            if (this.password != null) this.password.close();
+            if (this.password != null) this.password.destroy();
         }
 
         /**
@@ -224,14 +224,14 @@ class SetAuthenticatorTask extends Task {
          */
         public void
         setPassword(
-            @Nullable SecureString password // Callee takes ownership!
+            @Nullable DestroyableString password // Callee takes ownership!
         ) {
             if (password != null && (password.length() == 0 || (password.length() == 1 && password.charAt(0) == '-'))) {
-                password.close();
+                password.destroy();
                 password = null;
             } 
 
-            if (this.password != null) this.password.close();
+            if (this.password != null) this.password.destroy();
             
             this.password = password;
         }
@@ -309,7 +309,7 @@ class SetAuthenticatorTask extends Task {
         getPasswordAuthentication() {
 
             String       userName;
-            SecureString password;
+            DestroyableString password;
             
             String key;
             if (this.credentials.isEmpty()) {
@@ -336,7 +336,7 @@ class SetAuthenticatorTask extends Task {
                             && this.matches(ce.requestorType,      this.getRequestorType())
                         ) {
                             userName = ce.userName;
-                            password = SecureString.from(ce.getPassword());
+                            password = DestroyableString.from(ce.getPassword());
                             key      = ce.key();
                             break COMPUTE_CREDENTIALS;
                         }
@@ -373,10 +373,10 @@ class SetAuthenticatorTask extends Task {
             if (userName == null) {
                 userName = this.passwordStore.getUserName(key);
                 if (userName != null) {
-                    SecureString tmp;
+                    DestroyableString tmp;
                     tmp = this.passwordStore.getPassword(key, userName);
                     if (tmp != null) {
-                        if (password != null) password.close();
+                        if (password != null) password.destroy();
                         password = tmp;
                     }
                 }
@@ -447,8 +447,8 @@ class SetAuthenticatorTask extends Task {
                 }
 
                 userName = userNameField.getText();
-                if (password != null) password.close();
-                password = new SecureString(passwordField.getPassword());
+                if (password != null) password.destroy();
+                password = new DestroyableString(passwordField.getPassword());
             }
 
             PasswordAuthentication result;
@@ -484,7 +484,7 @@ class SetAuthenticatorTask extends Task {
                 throw ExceptionUtil.wrap("Saving password store", ioe, IllegalStateException.class);
             }
 
-            password.close();
+            password.destroy();
             
             return result;
         }
