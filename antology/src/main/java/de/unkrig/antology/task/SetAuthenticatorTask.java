@@ -134,15 +134,15 @@ class SetAuthenticatorTask extends Task {
     public static
     class CredentialsElement extends ProjectComponent implements Closeable {
 
-        @Nullable private Regex        requestingHost;
-        @Nullable private Regex        requestingSite;
-        @Nullable private Regex        requestingPort;
-        @Nullable private Regex        requestingProtocol;
-        @Nullable private Regex        requestingPrompt;
-        @Nullable private Regex        requestingScheme;
-        @Nullable private Regex        requestingUrl;
-        @Nullable private Regex        requestorType;
-        @Nullable private String       userName;
+        @Nullable private Regex             requestingHost;
+        @Nullable private Regex             requestingSite;
+        @Nullable private Regex             requestingPort;
+        @Nullable private Regex             requestingProtocol;
+        @Nullable private Regex             requestingPrompt;
+        @Nullable private Regex             requestingScheme;
+        @Nullable private Regex             requestingUrl;
+        @Nullable private Regex             requestorType;
+        @Nullable private String            userName;
         @Nullable private DestroyableString password;
 
         @Override protected void
@@ -269,7 +269,6 @@ class SetAuthenticatorTask extends Task {
 
         private final PasswordAuthenticationStore passwordStore;
         
-        public
         MyAuthenticator() throws IOException, GeneralSecurityException {
 
             // Set up an (unencrypted) username/password store.
@@ -314,7 +313,7 @@ class SetAuthenticatorTask extends Task {
         @Override @Nullable protected PasswordAuthentication
         getPasswordAuthentication() {
 
-            String       userName;
+            String            userName;
             DestroyableString password;
             
             String key;
