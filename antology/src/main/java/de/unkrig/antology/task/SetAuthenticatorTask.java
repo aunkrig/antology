@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.SecretKey;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -56,6 +57,7 @@ import de.unkrig.antology.util.SwingUtil;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
 import de.unkrig.commons.lang.security.DestroyableString;
+import de.unkrig.commons.lang.security.EncryptorDecryptors;
 import de.unkrig.commons.lang.security.UserNamePasswordStore;
 import de.unkrig.commons.lang.security.UserNamePasswordStores;
 import de.unkrig.commons.nullanalysis.Nullable;
@@ -269,21 +271,25 @@ class SetAuthenticatorTask extends Task {
         
         public
         MyAuthenticator() throws IOException, GeneralSecurityException {
-            
+
+            // Set up an (unencrypted) username/password store.
             UserNamePasswordStore pws = UserNamePasswordStores.propertiesUserNamePasswordStore(
                 UserNamePasswordStores.propertiesFileSecureProperties(
                     CREDENTIALS_STORE_FILE,
                     CREDENTIALS_STORE_COMMENTS
                 )
             );
-            
-            this.passwordStore = UserNamePasswordStores.encryptPasswords(
-                KEY_STORE_FILE,          // keyStoreFile
-                KEY_STORE_PASSWORD,      // keyStorePassword
-                KEY_ALIAS,               // keyAlias 
-                KEY_PROTECTION_PASSWORD, // keyProtectionPassword 
-                pws                      // delegate
+
+            // Get a key for password encryption.
+            SecretKey secretKey = EncryptorDecryptors.adHocSecretKey(
+                KEY_STORE_FILE,         // keyStoreFile
+                KEY_STORE_PASSWORD,     // keyStorePassword
+                KEY_ALIAS,              // keyAlias 
+                KEY_PROTECTION_PASSWORD // keyProtectionPassword 
             );
+            
+            // Wrap the username/password store for password encryption.
+            this.passwordStore = UserNamePasswordStores.encryptPasswords(secretKey, pws);
         }
 
         void
