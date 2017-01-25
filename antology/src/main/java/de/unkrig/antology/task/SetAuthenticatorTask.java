@@ -57,9 +57,9 @@ import de.unkrig.antology.util.SwingUtil;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
 import de.unkrig.commons.lang.security.DestroyableString;
-import de.unkrig.commons.lang.security.EncryptorDecryptors;
-import de.unkrig.commons.lang.security.UserNamePasswordStore;
-import de.unkrig.commons.lang.security.UserNamePasswordStores;
+import de.unkrig.commons.lang.security.Cryptors;
+import de.unkrig.commons.lang.security.PasswordAuthenticationStore;
+import de.unkrig.commons.lang.security.PasswordAuthenticationStores;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -267,21 +267,21 @@ class SetAuthenticatorTask extends Task {
         private final List<CredentialsElement>            credentials = new ArrayList<CredentialsElement>();
         private final Map<Object, PasswordAuthentication> cache       = new HashMap<Object, PasswordAuthentication>();
 
-        private final UserNamePasswordStore passwordStore;
+        private final PasswordAuthenticationStore passwordStore;
         
         public
         MyAuthenticator() throws IOException, GeneralSecurityException {
 
             // Set up an (unencrypted) username/password store.
-            UserNamePasswordStore pws = UserNamePasswordStores.propertiesUserNamePasswordStore(
-                UserNamePasswordStores.propertiesFileSecureProperties(
+            PasswordAuthenticationStore pas = PasswordAuthenticationStores.propertiesPasswordAuthenticationStore(
+                PasswordAuthenticationStores.propertiesFileSecureProperties(
                     CREDENTIALS_STORE_FILE,
                     CREDENTIALS_STORE_COMMENTS
                 )
             );
 
             // Get a key for password encryption.
-            SecretKey secretKey = EncryptorDecryptors.adHocSecretKey(
+            SecretKey secretKey = Cryptors.adHocSecretKey(
                 KEY_STORE_FILE,         // keyStoreFile
                 KEY_STORE_PASSWORD,     // keyStorePassword
                 KEY_ALIAS,              // keyAlias 
@@ -289,7 +289,7 @@ class SetAuthenticatorTask extends Task {
             );
             
             // Wrap the username/password store for password encryption.
-            this.passwordStore = UserNamePasswordStores.encryptPasswords(secretKey, pws);
+            this.passwordStore = PasswordAuthenticationStores.encryptPasswords(secretKey, pas);
         }
 
         void
