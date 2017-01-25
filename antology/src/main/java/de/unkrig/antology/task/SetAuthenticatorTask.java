@@ -73,9 +73,21 @@ class SetAuthenticatorTask extends Task {
     public enum CacheMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
     
     public enum StoreMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
+    
+    private static final File
+    KEY_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_keystore");
+    
+    private static final char[]
+    KEY_STORE_PASSWORD = new char[0];
+    
+    private static final String
+    KEY_ALIAS = "setAuthenticatorKey";
 
     public static final File
     CREDENTIALS_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_credentials");
+    
+    private static final char[]
+    KEY_PROTECTION_PASSWORD = new char[0];
 
     private static final String
     CREDENTIALS_STORE_COMMENTS = " The credentials store of the <setAuthenticator> task of http://antology.unkrig.de.";
@@ -258,13 +270,19 @@ class SetAuthenticatorTask extends Task {
         public
         MyAuthenticator() throws IOException, GeneralSecurityException {
             
-            this.passwordStore = UserNamePasswordStores.encryptPasswords(
-                UserNamePasswordStores.propertiesUserNamePasswordStore(
-                    UserNamePasswordStores.propertiesFileSecureProperties(
-                        CREDENTIALS_STORE_FILE,
-                        CREDENTIALS_STORE_COMMENTS
-                    )
+            UserNamePasswordStore pws = UserNamePasswordStores.propertiesUserNamePasswordStore(
+                UserNamePasswordStores.propertiesFileSecureProperties(
+                    CREDENTIALS_STORE_FILE,
+                    CREDENTIALS_STORE_COMMENTS
                 )
+            );
+            
+            this.passwordStore = UserNamePasswordStores.encryptPasswords(
+                KEY_STORE_FILE,          // keyStoreFile
+                KEY_STORE_PASSWORD,      // keyStorePassword
+                KEY_ALIAS,               // keyAlias 
+                KEY_PROTECTION_PASSWORD, // keyProtectionPassword 
+                pws                      // delegate
             );
         }
 
@@ -354,11 +372,17 @@ class SetAuthenticatorTask extends Task {
             
             if (userName == null) {
                 userName = this.passwordStore.getUserName(key);
-                if (password != null) password.close();
-                password = this.passwordStore.getPassword(key);
+                if (userName != null) {
+                    SecureString tmp;
+                    tmp = this.passwordStore.getPassword(key, userName);
+                    if (tmp != null) {
+                        if (password != null) password.close();
+                        password = tmp;
+                    }
+                }
             } else
             if (userName.equals(this.passwordStore.getUserName(key)) && password == null) {
-                password = this.passwordStore.getPassword(key);
+                password = this.passwordStore.getPassword(key, userName);
             }
 
             if (userName == null || password == null) {
