@@ -56,10 +56,10 @@ import de.unkrig.antology.util.Regex;
 import de.unkrig.antology.util.SwingUtil;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
+import de.unkrig.commons.lang.crypto.Cryptors;
+import de.unkrig.commons.lang.crypto.PasswordAuthenticationStore;
+import de.unkrig.commons.lang.crypto.PasswordAuthenticationStores;
 import de.unkrig.commons.lang.security.DestroyableString;
-import de.unkrig.commons.lang.security.Cryptors;
-import de.unkrig.commons.lang.security.PasswordAuthenticationStore;
-import de.unkrig.commons.lang.security.PasswordAuthenticationStores;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
