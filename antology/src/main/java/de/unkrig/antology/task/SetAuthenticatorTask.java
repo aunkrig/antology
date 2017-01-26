@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.PasswordAuthentication;
-import java.security.GeneralSecurityException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,10 +41,13 @@ import java.util.Map;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.Destroyable;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -52,7 +55,6 @@ import org.apache.tools.ant.ProjectComponent;
 import org.apache.tools.ant.Task;
 
 import de.unkrig.antology.util.Regex;
-import de.unkrig.antology.util.SwingUtil;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
 import de.unkrig.commons.lang.crypto.Cryptors;
@@ -87,9 +89,6 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     public static final File
     CREDENTIALS_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_credentials");
     
-    private static final char[]
-    KEY_PROTECTION_PASSWORD = new char[0];
-
     private static final String
     CREDENTIALS_STORE_COMMENTS = " The credentials store of the <setAuthenticator> task of http://antology.unkrig.de.";
 
@@ -295,28 +294,46 @@ class SetAuthenticatorTask extends Task implements Destroyable {
         private final List<CredentialsElement>            credentials = new ArrayList<CredentialsElement>();
         private final Map<Object, PasswordAuthentication> cache       = new HashMap<Object, PasswordAuthentication>();
 
-        private final PasswordAuthenticationStore passwordStore;
+        /**
+         * This one's initialized lazily by {@link #getPasswordStore()} to avoid unnecessary user interaction, like
+         * asking for the "master password".
+         */
+        @Nullable private PasswordAuthenticationStore passwordStore;
         
-        MyAuthenticator() throws IOException, GeneralSecurityException {
-
-            // Set up an (unencrypted) username/password store.
-            PasswordAuthenticationStore pas = PasswordAuthenticationStores.propertiesPasswordAuthenticationStore(
-                PasswordAuthenticationStores.propertiesFileSecureProperties(
-                    CREDENTIALS_STORE_FILE,
-                    CREDENTIALS_STORE_COMMENTS
-                )
-            );
-
-            // Get a key for password encryption.
-            SecretKey secretKey = Cryptors.adHocSecretKey(
-                KEY_STORE_FILE,         // keyStoreFile
-                KEY_STORE_PASSWORD,     // keyStorePassword
-                KEY_ALIAS,              // keyAlias 
-                KEY_PROTECTION_PASSWORD // keyProtectionPassword 
-            );
+        private PasswordAuthenticationStore getPasswordStore() {
             
-            // Wrap the username/password store for password encryption.
-            this.passwordStore = PasswordAuthenticationStores.encryptPasswords(secretKey, pas);
+            PasswordAuthenticationStore result = this.passwordStore;
+            if (result != null) return result;
+
+            try {
+
+                // Get a key for password encryption.
+                SecretKey secretKey = Cryptors.adHocSecretKey(
+                    KEY_STORE_FILE,         // keyStoreFile
+                    KEY_STORE_PASSWORD,     // keyStorePassword
+                    KEY_ALIAS,              // keyAlias 
+                    null                    // keyProtectionPassword 
+                );
+                if (secretKey == null) {
+                    result = PasswordAuthenticationStore.NOP;
+                } else {
+
+                    // Set up an (unencrypted) username/password store.
+                    PasswordAuthenticationStore pas = PasswordAuthenticationStores.propertiesPasswordAuthenticationStore(
+                        PasswordAuthenticationStores.propertiesFileDestroyableProperties(
+                            CREDENTIALS_STORE_FILE,
+                            CREDENTIALS_STORE_COMMENTS
+                        )
+                    );
+
+                    // Wrap the username/password store for password encryption.
+                    result = PasswordAuthenticationStores.encryptPasswords(secretKey, pas);
+                }
+            } catch (Exception e) {
+                result = PasswordAuthenticationStore.NOP;
+            }
+            
+            return (this.passwordStore = result);
         }
 
         public void
@@ -403,13 +420,13 @@ class SetAuthenticatorTask extends Task implements Destroyable {
             
             // Check the authentication store.
             if (userName == null) {
-                userName = this.passwordStore.getUserName(key);
+                userName = this.getPasswordStore().getUserName(key);
                 if (userName != null) {
-                    password = this.passwordStore.getPassword(key, userName);
+                    password = this.getPasswordStore().getPassword(key, userName);
                 }
             } else
-            if (password == null && userName.equals(this.passwordStore.getUserName(key))) {
-                password = this.passwordStore.getPassword(key, userName);
+            if (password == null && userName.equals(this.getPasswordStore().getUserName(key))) {
+                password = this.getPasswordStore().getPassword(key, userName);
             }
 
             // Now prompt the user for user name and passwords, and present the values found so far as proposals.
@@ -419,7 +436,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
             JPasswordField passwordField = new JPasswordField();
             if (password != null) passwordField.setText(new String(password.toCharArray()));
             
-            SwingUtil.focussify(userName != null && password == null ? passwordField : userNameField);
+            focussify(userName != null && password == null ? passwordField : userNameField);
 
             String message;
             {
@@ -491,15 +508,15 @@ class SetAuthenticatorTask extends Task implements Destroyable {
                 switch (SetAuthenticatorTask.this.storeMode) {
                 
                 case NONE:
-                    this.passwordStore.remove(key);
+                    this.getPasswordStore().remove(key);
                     break;
                     
                 case USER_NAMES:
-                    this.passwordStore.put(key, userName);
+                    this.getPasswordStore().put(key, userName);
                     break;
                     
                 case USER_NAMES_AND_PASSWORDS:
-                    this.passwordStore.put(key, userName, password);
+                    this.getPasswordStore().put(key, userName, password);
                     break;
                 }
             } catch (IOException ioe) {
@@ -571,5 +588,34 @@ class SetAuthenticatorTask extends Task implements Destroyable {
         char[] result = new char[l];
         for (int i = 0; i < l; i++) result[i] = cs.charAt(i);
         return result;
+    }
+
+    private static void
+    focussify(JComponent component) {
+
+        // One terrible hack: One this particular machine, "focussify()" makes any dialog unusable, and I have no
+        // reasonable way to debug the problem.
+        try {
+            if (InetAddress.getLocalHost().getHostName().endsWith("DRMF")) return;
+        } catch (UnknownHostException e) {
+            ;
+        }
+
+        // This is tricky... see
+        //    http://tips4java.wordpress.com/2010/03/14/dialog-focus/
+        component.addAncestorListener(new AncestorListener() {
+
+            @Override public void
+            ancestorAdded(@Nullable AncestorEvent event) {
+                assert event != null;
+                JComponent component = event.getComponent();
+                component.requestFocusInWindow();
+
+                component.removeAncestorListener(this);
+            }
+
+            @Override public void ancestorRemoved(@Nullable AncestorEvent event) {}
+            @Override public void ancestorMoved(@Nullable AncestorEvent event)   {}
+        });
     }
 }

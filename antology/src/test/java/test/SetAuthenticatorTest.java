@@ -27,6 +27,7 @@
 package test;
 
 import org.apache.tools.ant.BuildFileTest;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import junit.framework.TestCase;
@@ -42,6 +43,7 @@ class SetAuthenticatorTest extends BuildFileTest {
     @Override public void
     setUp() { this.configureProject("target/test-classes/test_setAuthenticator.ant"); }
 
+    @Ignore // ... because it requires user interaction.
     @Test public void
     test1() {
 
