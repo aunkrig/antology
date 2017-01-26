@@ -7,7 +7,9 @@
 	</taskdef>
 
 	<target name="test1">
-		<setAuthenticator />
+		<setAuthenticator store="USER_NAMES_AND_PASSWORDS">
+			<credentials />
+		</setAuthenticator>
 <!--		<urlConnection url="https://dal-i.intra.swm.de/dal/d/d/workspace/SpacesStore/68298e5d-f9ba-4831-b0a5-4d7f8786e1aa/Neues%20Dokument%20Allgemein.xlsx">
 			<input stdout="true" />
 		</urlConnection>-->

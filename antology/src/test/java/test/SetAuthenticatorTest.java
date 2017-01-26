@@ -29,6 +29,8 @@ package test;
 import org.apache.tools.ant.BuildFileTest;
 import org.junit.Test;
 
+import junit.framework.TestCase;
+
 // CHECKSTYLE JavadocMethod:OFF
 
 /**
@@ -43,11 +45,11 @@ class SetAuthenticatorTest extends BuildFileTest {
     @Test public void
     test1() {
 
-//        this.executeTarget("test1");
-//
-//        TestCase.assertEquals(
-//            "................................................................................",
-//            this.getError()
-//        );
+        this.executeTarget("test1");
+
+        TestCase.assertEquals(
+            "................................................................................",
+            this.getError()
+        );
     }
 }

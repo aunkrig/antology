@@ -26,13 +26,11 @@
 
 package de.unkrig.antology.task;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.PasswordAuthentication;
-import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
+import javax.security.auth.Destroyable;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -70,7 +69,7 @@ import de.unkrig.commons.nullanalysis.Nullable;
  * @see #addConfiguredCredentials(CredentialsElement)
  */
 public
-class SetAuthenticatorTask extends Task {
+class SetAuthenticatorTask extends Task implements Destroyable {
     
     public enum CacheMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
     
@@ -97,6 +96,17 @@ class SetAuthenticatorTask extends Task {
     private CacheMode                      cacheMode   = CacheMode.USER_NAMES_AND_PASSWORDS;
     private StoreMode                      storeMode   = StoreMode.NONE;
     private final List<CredentialsElement> credentials = new ArrayList<CredentialsElement>();
+
+    private boolean destroyed;
+
+    @Override public void
+    destroy() {
+        for (CredentialsElement ce : this.credentials) ce.destroy();
+        this.destroyed = true;
+    }
+
+    @Override public boolean
+    isDestroyed() { return this.destroyed; }
 
     /**
      * @ant.defaultValue USER_NAMES_AND_PASSWORDS
@@ -131,8 +141,8 @@ class SetAuthenticatorTask extends Task {
      *   configured, then the user is prompted for the missing user name and/or password.
      * </p>
      */
-    public static
-    class CredentialsElement extends ProjectComponent implements Closeable {
+    public static final
+    class CredentialsElement extends ProjectComponent implements Destroyable {
 
         @Nullable private Regex             requestingHost;
         @Nullable private Regex             requestingSite;
@@ -145,13 +155,19 @@ class SetAuthenticatorTask extends Task {
         @Nullable private String            userName;
         @Nullable private DestroyableString password;
 
+        private boolean destroyed;
+
         @Override protected void
-        finalize() { this.close(); }
+        finalize() { this.destroy(); }
 
         @Override public void
-        close() {
+        destroy() {
             if (this.password != null) this.password.destroy();
+            this.destroyed = true;
         }
+
+        @Override public boolean
+        isDestroyed() { return this.destroyed; }
 
         /**
          * Hostname of the site or proxy.
@@ -238,26 +254,38 @@ class SetAuthenticatorTask extends Task {
             this.password = password;
         }
 
-        // This is used as the key for the "cache" and the "store".
-        public String
-        key() {
-            String sep = "\0";
+        @Override public int
+        hashCode() {
             return (
-                this.requestingHost
-                + sep
-                + this.requestingSite
-                + sep
-                + this.requestingPort
-                + sep
-                + this.requestingProtocol
-                + sep
-                + this.requestingPrompt
-                + sep
-                + this.requestingScheme
-                + sep
-                + this.requestingUrl
-                + sep
-                + this.requestorType
+                ObjectUtil.hashCode(this.requestingHost)
+                + ObjectUtil.hashCode(this.requestingSite)
+                + ObjectUtil.hashCode(this.requestingPort)
+                + ObjectUtil.hashCode(this.requestingProtocol)
+                + ObjectUtil.hashCode(this.requestingPrompt)
+                + ObjectUtil.hashCode(this.requestingScheme)
+                + ObjectUtil.hashCode(this.requestingUrl)
+                + ObjectUtil.hashCode(this.requestorType)
+                + ObjectUtil.hashCode(this.userName)
+                + ObjectUtil.hashCode(this.password)
+            );
+        }
+
+        @Override public boolean
+        equals(@Nullable Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            CredentialsElement that = (CredentialsElement) obj;
+            return (
+                ObjectUtil.equals(this.requestingHost,        that.requestingHost)
+                && ObjectUtil.equals(this.requestingSite,     that.requestingSite)
+                && ObjectUtil.equals(this.requestingPort,     that.requestingPort)
+                && ObjectUtil.equals(this.requestingProtocol, that.requestingProtocol)
+                && ObjectUtil.equals(this.requestingPrompt,   that.requestingPrompt)
+                && ObjectUtil.equals(this.requestingScheme,   that.requestingScheme)
+                && ObjectUtil.equals(this.requestingUrl,      that.requestingUrl)
+                && ObjectUtil.equals(this.requestorType,      that.requestorType)
+                && ObjectUtil.equals(this.userName,           that.userName)
+                && ObjectUtil.equals(this.password,           that.password)
             );
         }
     }
@@ -291,170 +319,146 @@ class SetAuthenticatorTask extends Task {
             this.passwordStore = PasswordAuthenticationStores.encryptPasswords(secretKey, pas);
         }
 
-        void
+        public void
         addCredentials(Collection<CredentialsElement> credentials) {
             
-            NEW_CREDENTIALS:
             for (CredentialsElement newCe : credentials) {
-                for (CredentialsElement oldCe : this.credentials) {
-                    
-                    // Avoid adding duplicate entries.
-                    if (
-                        newCe.key().equals(oldCe.key())
-                        && ObjectUtil.equals(newCe.userName, oldCe.userName)
-                        && ObjectUtil.equals(newCe.getPassword(), oldCe.getPassword())
-                    ) continue NEW_CREDENTIALS;
-                }
-                
-                this.credentials.add(newCe);
+                if (!this.credentials.contains(newCe)) this.credentials.add(newCe);
             }
         }
 
         @Override @Nullable protected PasswordAuthentication
         getPasswordAuthentication() {
 
-            String            userName;
-            DestroyableString password;
+            // Search for the first applicable "<credentials>" subelement.
+
+            String            userName = null;
+            DestroyableString password = null;
             
-            String key;
-            if (this.credentials.isEmpty()) {
+            for (CredentialsElement ce : this.credentials) {
 
-                // Handle the special case with NO "<credentials>" subelement: ALWAYS ask for both user name and
-                // password.
-                userName = null;
-                password = null;
-                key      = "global";
-            } else {
-
-                // Search for the first applicable "<credentials>" subelement.
-                COMPUTE_CREDENTIALS: {
-                    for (CredentialsElement ce : this.credentials) {
-
-                        if (
-                            this.matches(ce.requestingHost,        this.getRequestingHost())
-                            && this.matches(ce.requestingSite,     this.getRequestingSite())
-                            && this.matches(ce.requestingPort,     this.getRequestingPort())
-                            && this.matches(ce.requestingProtocol, this.getRequestingProtocol())
-                            && this.matches(ce.requestingPrompt,   this.getRequestingPrompt())
-                            && this.matches(ce.requestingScheme,   this.getRequestingScheme())
-                            && this.matches(ce.requestingUrl,      this.getRequestingURL())
-                            && this.matches(ce.requestorType,      this.getRequestorType())
-                        ) {
-                            userName = ce.userName;
-                            password = DestroyableString.from(ce.getPassword());
-                            key      = ce.key();
-                            break COMPUTE_CREDENTIALS;
+                if (
+                    this.matches(ce.requestingHost,        this.getRequestingHost())
+                    && this.matches(ce.requestingSite,     this.getRequestingSite())
+                    && this.matches(ce.requestingPort,     this.getRequestingPort())
+                    && this.matches(ce.requestingProtocol, this.getRequestingProtocol())
+                    && this.matches(ce.requestingPrompt,   this.getRequestingPrompt())
+                    && this.matches(ce.requestingScheme,   this.getRequestingScheme())
+                    && this.matches(ce.requestingUrl,      this.getRequestingURL())
+                    && this.matches(ce.requestorType,      this.getRequestorType())
+                ) {
+                    userName = ce.userName;
+                    if (userName != null) {
+                        CharSequence passwordCs = ce.getPassword();
+                        if (passwordCs != null) {
+                            
+                            // The matching <credentials> subelement declares BOTH user name AND password;
+                            // return that tuple without any user interaction.
+                            return new PasswordAuthentication(userName, toCharArray(passwordCs));
                         }
                     }
-
-                    // No applicable "<credentials>" subelement; give up.
-                    return null;
+                    break;
                 }
             }
 
-            if (userName == null || password == null) {
-                switch (SetAuthenticatorTask.this.cacheMode) {
+            // Because the <credentials> subelement did not provide a user name-password pair, we have to go
+            // interactive, i.e. check the cache and/or the store, and raise a SWING dialog.
+
+            String key = (
+                this.getRequestorType().toString()
+                + '/'
+                + ObjectUtil.or(this.getRequestingProtocol(), "-")
+                + '/'
+                + ObjectUtil.or(this.getRequestingHost(), "-")
+                + '/'
+                + Integer.toString(this.getRequestingPort())
+                + '/'
+                + ObjectUtil.or(this.getRequestingScheme(), "-")
+            );
+
+            // Check the authentication cache.
+            switch (SetAuthenticatorTask.this.cacheMode) {
+            
+            case NONE:
+                ;
+                break;
                 
-                case NONE:
-                    ;
-                    break;
-                    
-                case USER_NAMES:
-                    synchronized (this.cache) {
-                        PasswordAuthentication result = this.cache.get(key);
-                        if (result != null) userName = result.getUserName();
-                    }
-                    break;
-                    
-                case USER_NAMES_AND_PASSWORDS:
-                    synchronized (this.cache) {
-                        PasswordAuthentication result = this.cache.get(key);
-                        if (result != null) return result;
-                    }
-                    break;
+            case USER_NAMES:
+                synchronized (this.cache) {
+                    PasswordAuthentication result = this.cache.get(key);
+                    if (result != null) userName = result.getUserName();
                 }
+                break;
+                
+            case USER_NAMES_AND_PASSWORDS:
+                synchronized (this.cache) {
+                    PasswordAuthentication result = this.cache.get(key);
+                    if (result != null) {
+                        userName = result.getUserName();
+                        password = new DestroyableString(result.getPassword());
+                    }
+                }
+                break;
             }
             
+            // Check the authentication store.
             if (userName == null) {
                 userName = this.passwordStore.getUserName(key);
                 if (userName != null) {
-                    DestroyableString tmp;
-                    tmp = this.passwordStore.getPassword(key, userName);
-                    if (tmp != null) {
-                        if (password != null) password.destroy();
-                        password = tmp;
-                    }
+                    password = this.passwordStore.getPassword(key, userName);
                 }
             } else
-            if (userName.equals(this.passwordStore.getUserName(key)) && password == null) {
+            if (password == null && userName.equals(this.passwordStore.getUserName(key))) {
                 password = this.passwordStore.getPassword(key, userName);
             }
 
-            if (userName == null || password == null) {
+            // Now prompt the user for user name and passwords, and present the values found so far as proposals.
+            JTextField userNameField = new JTextField();
+            if (userName != null) userNameField.setText(userName);
 
-                // The user name and/or the password are missing, so prompt the user for the missing element(s).
-                JTextField userNameField = new JTextField();
-                if (userName != null) {
-                    userNameField.setText(userName);
-                    userNameField.setEnabled(false);
-                } else {
-                    SwingUtil.focussify(userNameField);
-                }
+            JPasswordField passwordField = new JPasswordField();
+            if (password != null) passwordField.setText(new String(password.toCharArray()));
+            
+            SwingUtil.focussify(userName != null && password == null ? passwordField : userNameField);
 
-                JPasswordField passwordField = new JPasswordField();
-                if (password != null) {
-                    passwordField.setText(String.valueOf(password));
-                    passwordField.setEnabled(false);
-                } else {
-                    if (userName != null) SwingUtil.focussify(passwordField);
-                }
-
-                String message;
-                {
-                    message = "Authenticating to ";
-
-                    String requestingPrompt = this.getRequestingPrompt();
-                    if (requestingPrompt != null) message += "'" + requestingPrompt + "' on ";
-
-                    message += "'" + this.getRequestingHost() + ":" + this.getRequestingPort() + "'";
-
-                    if (this.getRequestorType() == RequestorType.PROXY) message += " proxy";
-
-                    URL requestingURL = this.getRequestingURL();
-                    if (requestingURL != null) {
-                        message += " / " + SetAuthenticatorTask.truncate(requestingURL.toString(), 100);
-                    }
-
-                    message += ":";
-                }
-
-                if (JOptionPane.showOptionDialog(
-                    null,                                     // parentComponent
-                    new Object[] {                            // message
-                        new JLabel(message),
-                        new JLabel("User ID:"),
-                        userNameField,
-                        new JLabel("Password:"),
-                        passwordField
-                    },
-                    (                                         // title
-                        this.getRequestorType() == RequestorType.PROXY
-                        ? "HTTP Proxy Authentication"
-                        : "HTTP Authentication"
-                    ),
-                    JOptionPane.OK_CANCEL_OPTION,             // optionType
-                    JOptionPane.PLAIN_MESSAGE,                // messageType
-                    null,                                     // icon
-                    null,                                     // options
-                    null                                      // initialValue
-                ) != JOptionPane.OK_OPTION) {
-                    throw new BuildException("HTTP authentication password dialog canceled");
-                }
-
-                userName = userNameField.getText();
-                if (password != null) password.destroy();
-                password = new DestroyableString(passwordField.getPassword());
+            String message;
+            {
+                StringBuilder sb = new StringBuilder();
+                
+                String requestingPrompt = this.getRequestingPrompt();
+                if (requestingPrompt != null) sb.append(requestingPrompt).append(": ");
+                
+                sb.append(key);
+                
+                message = sb.toString();
             }
+
+            if (JOptionPane.showOptionDialog(
+                null,                                     // parentComponent
+                new Object[] {                            // message
+                    new JLabel(message),
+                    new JLabel("User name:"),
+                    userNameField,
+                    new JLabel("Password:"),
+                    passwordField
+                },
+                this.getRequestingProtocol().toUpperCase() + ( // title
+                    this.getRequestorType() == RequestorType.PROXY
+                    ? " Proxy Authentication"
+                    : " Authentication"
+                ),
+                JOptionPane.OK_CANCEL_OPTION,             // optionType
+                JOptionPane.PLAIN_MESSAGE,                // messageType
+                null,                                     // icon
+                null,                                     // options
+                null                                      // initialValue
+            ) != JOptionPane.OK_OPTION) {
+                throw new BuildException("Authentication dialog canceled");
+            }
+
+            userName = userNameField.getText();
+            if (password != null) password.destroy();
+            password = new DestroyableString(passwordField.getPassword());
 
             PasswordAuthentication result;
             {
@@ -463,10 +467,23 @@ class SetAuthenticatorTask extends Task {
                 Arrays.fill(passwordCa, '\0');
             }
             
-            if (SetAuthenticatorTask.this.cacheMode != CacheMode.NONE) {
+            switch (SetAuthenticatorTask.this.cacheMode) {
+            
+            case NONE:
+                ;
+                break;
+              
+            case USER_NAMES:
+                synchronized (this.cache) {
+                    this.cache.put(key, new PasswordAuthentication(userName, null));
+                }
+                break;
+                
+            case USER_NAMES_AND_PASSWORDS:
                 synchronized (this.cache) {
                     this.cache.put(key, result);
                 }
+                break;
             }
             
             try {
@@ -513,6 +530,8 @@ class SetAuthenticatorTask extends Task {
 
     @Override public void
     execute() {
+        
+        if (this.destroyed) throw new IllegalStateException();
 
         synchronized (SetAuthenticatorTask.class) {
             
@@ -543,5 +562,14 @@ class SetAuthenticatorTask extends Task {
     protected static String
     truncate(String s, int lengthLimit) {
         return s.length() <= lengthLimit ? s : s.substring(0, lengthLimit - 3) + "...";
+    }
+
+    private static char[]
+    toCharArray(CharSequence cs) {
+        int l = cs.length();
+        
+        char[] result = new char[l];
+        for (int i = 0; i < l; i++) result[i] = cs.charAt(i);
+        return result;
     }
 }
