@@ -57,9 +57,9 @@ import org.apache.tools.ant.Task;
 import de.unkrig.antology.util.Regex;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
-import de.unkrig.commons.lang.crypto.Cryptors;
 import de.unkrig.commons.lang.crypto.PasswordAuthenticationStore;
 import de.unkrig.commons.lang.crypto.PasswordAuthenticationStores;
+import de.unkrig.commons.lang.crypto.SecretKeys;
 import de.unkrig.commons.lang.security.DestroyableString;
 import de.unkrig.commons.nullanalysis.Nullable;
 
@@ -308,11 +308,13 @@ class SetAuthenticatorTask extends Task implements Destroyable {
             try {
 
                 // Get a key for password encryption.
-                SecretKey secretKey = Cryptors.adHocSecretKey(
+                SecretKey secretKey = SecretKeys.adHocSecretKey(
                     KEY_STORE_FILE,         // keyStoreFile
                     KEY_STORE_PASSWORD,     // keyStorePassword
                     KEY_ALIAS,              // keyAlias 
-                    null                    // keyProtectionPassword 
+                    "Authentication store", // dialogTitle 
+                    "Do you want to create an authentication store for user names and passwords?", // messageCreateKey 
+                    "Do you want to use the existing authentication store for user names and passwords?" // messageUseExistingKey 
                 );
                 if (secretKey == null) {
                     result = PasswordAuthenticationStore.NOP;
