@@ -29,30 +29,37 @@ package test;
 import java.util.regex.Pattern;
 
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
 import org.apache.tools.ant.ExitStatusException;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import de.unkrig.commons.nullanalysis.Nullable;
 import junit.framework.ComparisonFailure;
 import junit.framework.TestCase;
 
-// CHECKSTYLE JavadocMethod:OFF
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ForEach2Task}.
  */
 public
-class Retry2Test extends BuildFileTest {
+class Retry2Test {
+    
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_retry2.ant"); }
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_retry2.ant");
+    }
 
     @Test public void
     test1() {
         long start = System.currentTimeMillis();
         try {
-            this.executeTarget("test1");
+            this.rule.executeTarget("test1");
             TestCase.fail();
         } catch (BuildException be) {
             TestCase.assertEquals("Giving up after 2 retries: Nested task failed", be.getMessage());
@@ -73,7 +80,7 @@ class Retry2Test extends BuildFileTest {
             + "Retrying..."
             + "\\S+test_retry2\\.ant:\\d+: "
             + "Nested task failed"
-        ), this.getLog());
+        ), this.rule.getLog());
         TestCase.assertTrue(took + "ms", took >= 2900 && took <= 3300);
     }
 

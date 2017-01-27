@@ -26,43 +26,52 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
-// CHECKSTYLE JavadocMethod:OFF
+import de.unkrig.commons.junit4.AssertString;
+
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ForEach2Task}.
  */
 public
-class XmlProperty2Test extends BuildFileTest {
+class XmlProperty2Test {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_xmlProperty2.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
+
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_xmlProperty2.ant");
+    }
 
     @Test public void
     test1() {
 
-        this.executeTarget("test1");
+        this.rule.executeTarget("test1");
 
-        this.assertLogContaining("prefix.0.project.$$=");
-        this.assertLogContaining("prefix.0.project._name=prj1");
-        this.assertLogContaining("prefix.0.project.0.$=\\n\\t");
-        this.assertLogContaining("prefix.0.project.1.target.$$=");
-        this.assertLogContaining("prefix.0.project.1.target._name=trg1");
-        this.assertLogContaining("prefix.0.project.1.target.0.$=\\n\\t\\t");
-        this.assertLogContaining("prefix.0.project.1.target.1.echo.$$=");
-        this.assertLogContaining("prefix.0.project.1.target.1.echo._message=msg");
-        this.assertLogContaining("prefix.0.project.1.target.2.$=\\n\\t");
-        this.assertLogContaining("prefix.0.project.2.$=\\n");
+        AssertString.assertContains("prefix.0.project.$$=",                          this.rule.getLog());
+        AssertString.assertContains("prefix.0.project._name=prj1",                   this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.0.$=\\n\\t",                   this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.1.target.$$=",                 this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.1.target._name=trg1",          this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.1.target.0.$=\\n\\t\\t",       this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.1.target.1.echo.$$=",          this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.1.target.1.echo._message=msg", this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.1.target.2.$=\\n\\t",          this.rule.getLog());
+        AssertString.assertContains("prefix.0.project.2.$=\\n",                      this.rule.getLog());
     }
 
     @Test public void
     test2() {
 
-        this.executeTarget("test2");
+        this.rule.executeTarget("test2");
 
-        this.assertOutputContaining(
+        AssertString.assertContains((
             ""
             + "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
             + "<!--LEADING COMMENT-->"
@@ -76,30 +85,30 @@ class XmlProperty2Test extends BuildFileTest {
             + "\t</target>\n"
             + "</project>"
             + "<!--TRAILING COMMENT-->"
-        );
+        ), this.rule.getOutput());
     }
 
     @Test public void
     test3() {
 
-        this.executeTarget("test3");
+        this.rule.executeTarget("test3");
 
-        this.assertLogContaining("prefix.0.\\#=\\ MY COMMENT ");
-        this.assertLogContaining("prefix.1.project.$$=bla bla bla");
-        this.assertLogContaining("prefix.1.project._name=prj1");
-        this.assertLogContaining("prefix.1.project.0.$=\\n\\tbla ");
-        this.assertLogContaining("prefix.1.project.1.\\!=bla");
-        this.assertLogContaining("prefix.1.project.2.$=\\ bla\\n\\t");
-        this.assertLogContaining("prefix.1.project.3.target.$$=&<");
-        this.assertLogContaining("prefix.1.project.3.target._name=trg1");
-        this.assertLogContaining("prefix.1.project.3.target.0.$=\\n\\t\\t");
-        this.assertLogContaining("prefix.1.project.3.target.1.echo.$$=");
-        this.assertLogContaining("prefix.1.project.3.target.1.echo._message=msg");
-        this.assertLogContaining("prefix.1.project.3.target.2.$=\\n\\t\\t");
-        this.assertLogContaining("prefix.1.project.3.target.3.$=&");
-        this.assertLogContaining("prefix.1.project.3.target.4.$=<");
-        this.assertLogContaining("prefix.1.project.3.target.5.$=\\n\\t");
-        this.assertLogContaining("prefix.1.project.4.$=\\n");
-        this.assertLogContaining("prefix.2.\\#=ONE MORE");
+        AssertString.assertContains("prefix.0.\\#=\\ MY COMMENT ",                   this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.$$=bla bla bla",               this.rule.getLog());
+        AssertString.assertContains("prefix.1.project._name=prj1",                   this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.0.$=\\n\\tbla ",               this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.1.\\!=bla",                    this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.2.$=\\ bla\\n\\t",             this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.$$=&<",               this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target._name=trg1",          this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.0.$=\\n\\t\\t",       this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.1.echo.$$=",          this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.1.echo._message=msg", this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.2.$=\\n\\t\\t",       this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.3.$=&",               this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.4.$=<",               this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.3.target.5.$=\\n\\t",          this.rule.getLog());
+        AssertString.assertContains("prefix.1.project.4.$=\\n",                      this.rule.getLog());
+        AssertString.assertContains("prefix.2.\\#=ONE MORE",                         this.rule.getLog());
     }
 }

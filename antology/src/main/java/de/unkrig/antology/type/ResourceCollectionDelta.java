@@ -154,7 +154,7 @@ class ResourceCollectionDelta implements ResourceCollection, Iterable<Resource> 
 
         final Properties newState = new Properties();
         final Resources  result   = new Resources();
-        for (@SuppressWarnings("unchecked") final Iterator<Resource> it = delegate.iterator(); it.hasNext();) {
+        for (final Iterator<Resource> it = delegate.iterator(); it.hasNext();) {
             final Resource subject = it.next();
 
             String key = stateKey + '@' + subject.getName();
@@ -194,7 +194,7 @@ class ResourceCollectionDelta implements ResourceCollection, Iterable<Resource> 
             }
         }
 
-        @SuppressWarnings("unchecked") final Iterator<Resource> tmp = result.iterator();
+        final Iterator<Resource> tmp = result.iterator();
         return new Iterator<Resource>() {
 
             @Override public boolean

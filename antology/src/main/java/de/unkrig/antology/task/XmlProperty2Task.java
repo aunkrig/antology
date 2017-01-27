@@ -292,7 +292,7 @@ class XmlProperty2Task extends Task {
         }
 
         for (ResourceCollection resourceCollection : this.resourceCollections) {
-            for (@SuppressWarnings("unchecked") Iterator<Resource> it = resourceCollection.iterator(); it.hasNext();) {
+            for (Iterator<Resource> it = resourceCollection.iterator(); it.hasNext();) {
                 Resource resource = it.next();
 
                 this.execute3(resource.getInputStream(), resource.toString());

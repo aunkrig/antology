@@ -46,7 +46,7 @@ import de.unkrig.commons.nullanalysis.Nullable;
  * user interactively for user name and password through a SWING {@link JOptionPane}.
  *
  * @see Authenticator#setDefault(Authenticator)
- * @see #addConfiguredCredentials(CredentialsSpec)
+ * @see #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)
  */
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
@@ -86,14 +86,13 @@ class SetAuthenticatorTask extends Task implements Destroyable {
      *   requestor type match the respective attributes.
      * </p>
      * <p>
-     *   If no {@link #setUserName(String) user name} and/or no {@link #setPassword(DestroyableString) password} are
-     *   configured, then the user is prompted for the missing user name and/or password.
+     *   If no {@link CredentialsSpec#setUserName(String) user name} and/or no {@link
+     *   CredentialsSpec#setPassword(DestroyableString) password} are configured, then the user is prompted for the
+     *   missing user name and/or password.
      * </p>
      */
     public void
-    addConfiguredCredentials(CredentialsSpec credentials) {
-        this.credentials.add(credentials);
-    }
+    addConfiguredCredentials(CredentialsSpec credentials) { this.credentials.add(credentials); }
 
     @Override public void
     execute() {
@@ -105,7 +104,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
             // Install the "MyAuthenticator" exactly ONCE.
             CustomAuthenticator ma = SetAuthenticatorTask.myAuthenticator;
             if (ma == null) {
-                ma = SetAuthenticatorTask.myAuthenticator = new CustomAuthenticator(this.cacheMode, this.storeMode);
+                ma = (SetAuthenticatorTask.myAuthenticator = new CustomAuthenticator(this.cacheMode, this.storeMode));
                 Authenticator.setDefault(ma);
             }
             

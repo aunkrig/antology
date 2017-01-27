@@ -26,57 +26,51 @@
 
 package test;
 
-import java.util.regex.Pattern;
-
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
-import de.unkrig.commons.nullanalysis.Nullable;
-import junit.framework.TestCase;
+import de.unkrig.commons.junit4.AssertRegex;
 
-// CHECKSTYLE JavadocMethod:OFF
+// CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.FollowTask}.
  */
 public
-class NslookupTest extends BuildFileTest {
+class NslookupTest {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_nslookup.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
+
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_nslookup.ant");
+    }
 
     @Test public void
     test1() {
-        this.executeTarget("test1");
-        this.assertPropertyEquals("addresses",         "127.0.0.1,0:0:0:0:0:0:0:1");
-        this.assertPropertyEquals("address",           "127.0.0.1");
-        this.assertPropertyEquals("canonicalHostName", "127.0.0.1");
-        this.assertPropertyEquals("hostName",          "localhost");
+        this.rule.executeTarget("test1");
+        Assert.assertEquals("127.0.0.1,0:0:0:0:0:0:0:1", this.rule.getProject().getProperty("addresses"));
+        Assert.assertEquals("127.0.0.1",                 this.rule.getProject().getProperty("address"));
+        Assert.assertEquals("127.0.0.1",                 this.rule.getProject().getProperty("canonicalHostName"));
+        Assert.assertEquals("localhost",                 this.rule.getProject().getProperty("hostName"));
     }
 
     @Test public void
     test2() {
-        this.executeTarget("test2");
+        this.rule.executeTarget("test2");
 
         final String ipV4Address     = "(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})";
         final String ipV6Address     = "(?:\\p{XDigit}{1,4}(?::\\p{XDigit}{1,4}){7})";
         final String ipV4OrV6Address = "(?:" + ipV4Address + "|" + ipV6Address + ")";
 
-        this.assertPropertyMatches("addresses",         ipV4OrV6Address + "(?:," + ipV4OrV6Address + ")*");
-        this.assertPropertyMatches("address",           ipV4OrV6Address);
-        this.assertPropertyMatches("canonicalHostName", "[\\w\\-.]+");
-        this.assertPropertyEquals("hostName",           "www.google.com");
-    }
-
-    private void
-    assertPropertyMatches(String propertyName, String regex) {
-        NslookupTest.assertMatches(regex, this.getProject().getProperty(propertyName));
-    }
-
-    private static void
-    assertMatches(String regex, @Nullable String actual) {
-        if (actual == null || !Pattern.matches(regex, actual)) {
-            TestCase.fail("expected:<" + regex + "> but was <" + actual + ">");
-        }
+        // SUPPRESS CHECKSTYLE LineLength:4
+        AssertRegex.assertMatches(ipV4OrV6Address + "(?:," + ipV4OrV6Address + ")*", this.rule.getProject().getProperty("addresses"));
+        AssertRegex.assertMatches(ipV4OrV6Address,                                   this.rule.getProject().getProperty("address"));
+        AssertRegex.assertMatches("[\\w\\-.]+",                                      this.rule.getProject().getProperty("canonicalHostName"));
+        Assert.assertEquals("www.google.com",                                        this.rule.getProject().getProperty("hostName"));
     }
 }

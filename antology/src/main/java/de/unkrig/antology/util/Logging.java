@@ -111,7 +111,7 @@ class Logging {
     public static void
     setLogMessagePrefix(Project project, String prefix) {
 
-        @SuppressWarnings("unchecked") List<BuildListener> orig = project.getBuildListeners();
+        List<BuildListener> orig = project.getBuildListeners();
 
         // Verify that all build listeners of the project are wrapped in IndentingBuildListeners.
         for (BuildListener buildListener : orig) {

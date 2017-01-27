@@ -26,37 +26,48 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
-// CHECKSTYLE JavadocMethod:OFF
+import de.unkrig.commons.junit4.AssertString;
+
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.FollowTask}.
  */
 public
-class FollowTest extends BuildFileTest {
+class FollowTest {
 
-//    @Override public void
-//    setUp() { this.configureProject("target/test-classes/test_follow.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
 
-    @Test public void
-    test1() {
-//        this.executeTarget("test1");
-//        this.assertOutputContaining("HELLO\n");
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_follow.ant");
     }
 
-//    @Ignore
-//    @Test public void
-//    test2() {
-//        this.executeTarget("test2");
-//        this.assertOutputContaining("");
-//    }
-//
-//    @Ignore
-//    @Test public void
-//    testFollowHttp() {
-//        this.executeTarget("followHttp");
-//        this.assertOutputContaining("");
-//    }
+    @Ignore("Would require user interaction")
+    @Test public void
+    test1() {
+        this.rule.executeTarget("test1");
+        AssertString.assertContains("HELLO\n", this.rule.getOutput());
+    }
+
+    @Ignore("Would require user interaction")
+    @Test public void
+    test2() {
+        this.rule.executeTarget("test2");
+        AssertString.assertContains("", this.rule.getOutput());
+    }
+
+    @Ignore("Would require a running HTTP server")
+    @Test public void
+    testFollowHttp() {
+        this.rule.executeTarget("followHttp");
+        AssertString.assertContains("", this.rule.getOutput());
+    }
 }

@@ -26,33 +26,41 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
-// CHECKSTYLE JavadocMethod:OFF
+import de.unkrig.commons.junit4.AssertString;
+
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.UrlConnectionTask}.
  */
 public
-class UrlConnectionTest extends BuildFileTest {
+class UrlConnectionTest {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_urlConnection.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
 
-    @Test public void
-    test1() {
-//        this.executeTarget("test1");
-//        this.assertOutputContaining(
-//            "Statusabfrage des Tomcat f"
-//        );
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_urlConnection.ant");
     }
 
+    @Ignore
+    @Test public void
+    test1() {
+        this.rule.executeTarget("test1");
+        AssertString.assertContains("Statusabfrage des Tomcat f", this.rule.getOutput());
+    }
+
+    @Ignore
     @Test public void
     test2() {
-//        this.executeTarget("test2");
-//        this.assertOutputContaining(
-//            "Statusabfrage des Tomcat f"
-//        );
+        this.rule.executeTarget("test2");
+        AssertString.assertContains("Statusabfrage des Tomcat f", this.rule.getOutput());
     }
 }

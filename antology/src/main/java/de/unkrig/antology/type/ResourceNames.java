@@ -68,7 +68,7 @@ class ResourceNames extends ProjectComponent implements ResourceCollection, Iter
 
         return new Iterator<Resource>() {
 
-            @SuppressWarnings("unchecked") final Iterator<Resource> iter = delegate.iterator();
+            final Iterator<Resource> iter = delegate.iterator();
 
             @Override public boolean
             hasNext() { return this.iter.hasNext(); }

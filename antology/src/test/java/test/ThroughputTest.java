@@ -26,38 +26,45 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import junit.framework.TestCase;
 
-// CHECKSTYLE JavadocMethod:OFF
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ThroughputTask}.
  */
 public
-class ThroughputTest extends BuildFileTest {
+class ThroughputTest {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_throughput.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
+
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_throughput.ant");
+    }
 
     @Test public void
     test1() {
 
-        this.executeTarget("test1");
+        this.rule.executeTarget("test1");
 
         TestCase.assertEquals((
             ""
             + "Starting... (100 KB)"
             + "... done! Took 1s (100 KB @ 100 KB/s)"
-        ), this.getLog());
+        ), this.rule.getLog());
     }
 
     @Test public void
     test2() {
 
-        this.executeTarget("test2");
+        this.rule.executeTarget("test2");
 
         TestCase.assertEquals((
             ""
@@ -72,6 +79,6 @@ class ThroughputTest extends BuildFileTest {
             + "; 3,000 KB remaining = approx. 0:01:30"
             + " = ETA 2014-01-01 00:01:30.000"
             + ")"
-        ), this.getLog());
+        ), this.rule.getLog());
     }
 }

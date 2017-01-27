@@ -43,21 +43,14 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ant</groupId>
-      <artifactId>ant</artifactId>
-      <version>1.8.4</version>
-      <scope>provided</scope>
+    	<groupId>org.apache.ant</groupId>
+    	<artifactId>ant</artifactId>
+    	<version>1.9.8</version>
     </dependency>
     <dependency>
       <groupId>org.apache.ant</groupId>
       <artifactId>ant-testutil</artifactId>
-      <version>1.8.4</version>
+      <version>1.9.8</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -79,6 +72,12 @@
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-net</artifactId>
     	<version>1.2.8-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>de.unkrig.commons</groupId>
+    	<artifactId>commons-junit4</artifactId>
+    	<version>1.2.8-SNAPSHOT</version>
+    	<scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>commons-net</groupId>
@@ -133,7 +132,7 @@
            <autoReleaseAfterClose>false</autoReleaseAfterClose>
         </configuration>
       </plugin>
-
+<!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
@@ -148,7 +147,7 @@
           </execution>
         </executions>
       </plugin>
-
+-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -184,14 +183,14 @@
             <docletArtifact>
               <groupId>org.apache.ant</groupId>
               <artifactId>ant</artifactId>
-              <version>1.8.4</version>
+              <version>1.9.8</version>
             </docletArtifact>
 
             <!-- The "EnumeratedAttribute"s of the "FTP2" task require the following on the doclet classpath: -->
             <docletArtifact>
               <groupId>org.apache.ant</groupId>
               <artifactId>ant-commons-net</artifactId>
-              <version>1.8.4</version>
+              <version>1.9.8</version>
             </docletArtifact>
           </docletArtifacts>
 

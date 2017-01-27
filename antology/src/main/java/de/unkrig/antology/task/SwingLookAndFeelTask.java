@@ -61,7 +61,8 @@ import de.unkrig.commons.nullanalysis.Nullable;
  * <img src="doc-files/Windows_dialog.png" />
  * </p>
  */
-public class SwingLookAndFeelTask extends Task {
+public
+class SwingLookAndFeelTask extends Task {
 
     @Nullable
     private String lookAndFeelNameProperty, lookAndFeelIdProperty, lookAndFeelClassNameProperty;
@@ -80,19 +81,16 @@ public class SwingLookAndFeelTask extends Task {
      * @see UIManager#getLookAndFeel()
      * @see LookAndFeel#getName()
      */
-    public void setGetLookAndFeelName(String propertyName) {
-        this.lookAndFeelNameProperty = propertyName;
-    }
+    public void
+    setGetLookAndFeelName(String propertyName) { this.lookAndFeelNameProperty = propertyName; }
 
     /** @see #setGetLookAndFeelName(String) */
-    public void setGetLookAndFeelId(String propertyName) {
-        this.lookAndFeelIdProperty = propertyName;
-    }
+    public void
+    setGetLookAndFeelId(String propertyName) { this.lookAndFeelIdProperty = propertyName; }
 
     /** @see #setGetLookAndFeelName(String) */
-    public void setGetLookAndFeelClassName(String propertyName) {
-        this.lookAndFeelClassNameProperty = propertyName;
-    }
+    public void
+    setGetLookAndFeelClassName(String propertyName) { this.lookAndFeelClassNameProperty = propertyName; }
 
     /**
      * Store the names or IDs of the auxiliary look-and-feels in the named
@@ -102,14 +100,12 @@ public class SwingLookAndFeelTask extends Task {
      * @see LookAndFeel#getName()
      * @see LookAndFeel#getID()
      */
-    public void setGetAuxiliaryLookAndFeelNames(String propertyName) {
-        this.auxiliaryLookAndFeelNamesProperty = propertyName;
-    }
+    public void
+    setGetAuxiliaryLookAndFeelNames(String propertyName) { this.auxiliaryLookAndFeelNamesProperty = propertyName; }
 
     /** @see #setGetAuxiliaryLookAndFeelNames(String) */
-    public void setGetAuxiliaryLookAndFeelIds(String propertyName) {
-        this.auxiliaryLookAndFeelIdsProperty = propertyName;
-    }
+    public void
+    setGetAuxiliaryLookAndFeelIds(String propertyName) { this.auxiliaryLookAndFeelIdsProperty = propertyName; }
 
     /**
      * Store the names or class names of all available look-and-feels in the
@@ -119,12 +115,12 @@ public class SwingLookAndFeelTask extends Task {
      * @see LookAndFeelInfo#getName()
      * @see LookAndFeelInfo#getClassName()
      */
-    public void setGetInstalledLookAndFeelNames(String propertyName) {
-        this.installedLookAndFeelNamesProperty = propertyName;
-    }
+    public void
+    setGetInstalledLookAndFeelNames(String propertyName) { this.installedLookAndFeelNamesProperty = propertyName; }
 
     /** @see #setGetInstalledLookAndFeelNames(String) */
-    public void setGetInstalledLookAndFeelClassNames(String propertyName) {
+    public void
+    setGetInstalledLookAndFeelClassNames(String propertyName) {
         this.installedLookAndFeelClassNamesProperty = propertyName;
     }
 
@@ -133,7 +129,8 @@ public class SwingLookAndFeelTask extends Task {
      *
      * @see UIManager#setLookAndFeel(String)
      */
-    public void setName(String name) {
+    public void
+    setName(String name) {
 
         for (LookAndFeelInfo lafi : UIManager.getInstalledLookAndFeels()) {
             if (lafi.getName().equals(name)) {
@@ -145,27 +142,27 @@ public class SwingLookAndFeelTask extends Task {
     }
 
     /** @see #setName(String) */
-    public void setClassName(String className) {
-        if (this.className != null)
-            throw new BuildException("At most one look-and-feel can be set");
+    public void
+    setClassName(String className) {
+        if (this.className != null) throw new BuildException("At most one look-and-feel can be set");
         this.className = className;
     }
 
     /**
      * Load the "cross-platform look-and-feel" (a.k.a. "Metal").
      */
-    public void setCrossPlatform(boolean value) {
-        if (value)
-            this.setClassName(UIManager.getCrossPlatformLookAndFeelClassName());
+    public void
+    setCrossPlatform(boolean value) {
+        if (value) this.setClassName(UIManager.getCrossPlatformLookAndFeelClassName());
     }
 
     /**
      * Load the "system look-and-feel". (On MS Windows systems, that is usually
      * the "Windows" look-and-feel.)
      */
-    public void setSystem(boolean value) {
-        if (value)
-            this.setClassName(UIManager.getSystemLookAndFeelClassName());
+    public void
+    setSystem(boolean value) {
+        if (value) this.setClassName(UIManager.getSystemLookAndFeelClassName());
     }
 
     /**
@@ -178,12 +175,13 @@ public class SwingLookAndFeelTask extends Task {
      * @see #setGetInstalledLookAndFeelClassNames(String)
      * @ant.defaultValue ,
      */
-    public void setSeparator(String separator) {
+    public void
+    setSeparator(String separator) {
         this.separator = separator;
     }
 
-    @Override
-    public void execute() throws BuildException {
+    @Override public void
+    execute() throws BuildException {
 
         if (this.lookAndFeelNameProperty != null) {
             this.getProject().setProperty(this.lookAndFeelNameProperty, UIManager.getLookAndFeel().getName());
@@ -194,8 +192,10 @@ public class SwingLookAndFeelTask extends Task {
         }
 
         if (this.lookAndFeelClassNameProperty != null) {
-            this.getProject().setProperty(this.lookAndFeelClassNameProperty,
-                UIManager.getLookAndFeel().getClass().getName());
+            this.getProject().setProperty(
+                this.lookAndFeelClassNameProperty,
+                UIManager.getLookAndFeel().getClass().getName()
+            );
         }
 
         if (this.auxiliaryLookAndFeelNamesProperty != null) {

@@ -26,25 +26,34 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
-// CHECKSTYLE JavadocMethod:OFF
+import de.unkrig.commons.junit4.AssertString;
+
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ThroughputTask}.
  */
 public
-class ConditionsTest extends BuildFileTest {
+class ConditionsTest {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_conditions.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
+
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_conditions.ant");
+    }
 
     @Test public void
     test1() {
 
-        this.executeTarget("test1");
+        this.rule.executeTarget("test1");
 
-        this.assertLogContaining("FOOFOOFOOFOO");
+        AssertString.assertContains("FOOFOOFOOFOO", this.rule.getLog());
     }
 }

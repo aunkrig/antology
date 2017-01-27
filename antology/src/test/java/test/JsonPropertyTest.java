@@ -26,24 +26,33 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
-// CHECKSTYLE JavadocMethod:OFF
+import de.unkrig.commons.junit4.AssertString;
+
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.UrlConnectionTask}.
  */
 public
-class JsonPropertyTest extends BuildFileTest {
+class JsonPropertyTest {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_jsonProperty.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
+
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_jsonProperty.ant");
+    }
 
     @Test public void
     testJsonProperty() {
-        this.executeTarget("testJsonProperty");
-        this.assertLogContaining(
+        this.rule.executeTarget("testJsonProperty");
+        AssertString.assertContains((
             ""
             + "foo.a=3\r\n"
             + "foo.b=false\r\n"
@@ -52,7 +61,7 @@ class JsonPropertyTest extends BuildFileTest {
             + "foo.d.1=2\r\n"
             + "foo.d.2=3\r\n"
             + "foo.e.f=7.3"
-        );
+        ), this.rule.getLog());
     }
 }
 

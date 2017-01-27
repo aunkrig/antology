@@ -26,32 +26,42 @@
 
 package test;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import junit.framework.TestCase;
 
-// CHECKSTYLE JavadocMethod:OFF
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.FollowTask}.
  */
 public
-class SetAuthenticatorTest extends BuildFileTest {
+class SetAuthenticatorTest {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_setAuthenticator.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
 
-    @Ignore // ... because it requires user interaction.
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_setAuthenticator.ant");
+    }
+
+    @Ignore("Would require user interaction")
     @Test public void
-    test1() {
+    jugmTest() {
 
-        this.executeTarget("test1");
+        this.rule.executeTarget("test1");
 
         TestCase.assertEquals(
             "................................................................................",
-            this.getError()
+            this.rule.getError()
         );
     }
+    
+    @Test public void
+    dummyTest() {}
 }

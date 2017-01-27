@@ -208,7 +208,7 @@ class ForEach2Task extends Task {
      * Whether the elements of the iteration, if they are strings, should silently be trimmed, i.e. leading and
      * trailing whitespace be removed.
      * 
-     * @ant.defaultValue {@value DEFAULT_TRIM}
+     * @ant.defaultValue {@value #DEFAULT_TRIM}
      */
     public void
     setTrim(boolean value) { this.trim = value; }
@@ -340,7 +340,7 @@ class ForEach2Task extends Task {
 
             @Override public Iterator<Resource>
             iterator() {
-                @SuppressWarnings("unchecked") Iterator<Resource> it = resourceCollection.iterator();
+                Iterator<Resource> it = resourceCollection.iterator();
                 return it;
             }
 

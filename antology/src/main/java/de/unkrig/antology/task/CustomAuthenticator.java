@@ -212,10 +212,11 @@ class CustomAuthenticator extends Authenticator {
         }
     }
 
-    private final CacheMode                           cacheMode;
-    private final StoreMode                           storeMode;
-    private final List<CredentialsSpec>               credentials = new ArrayList<CustomAuthenticator.CredentialsSpec>();
-    private final Map<Object, PasswordAuthentication> cache       = new HashMap<Object, PasswordAuthentication>();
+    private final CacheMode             cacheMode;
+    private final StoreMode             storeMode;
+    private final List<CredentialsSpec> credentials = new ArrayList<CustomAuthenticator.CredentialsSpec>();
+    
+    private final Map<Object, PasswordAuthentication> cache = new HashMap<Object, PasswordAuthentication>();
 
     /**
      * This one's initialized lazily by {@link #getPasswordStore()} to avoid unnecessary user interaction, like
@@ -359,7 +360,7 @@ class CustomAuthenticator extends Authenticator {
         
         CustomAuthenticator.focussify(userName != null && password == null ? passwordField : userNameField);
 
-        String message = key;
+        String message          = key;
         String requestingPrompt = this.getRequestingPrompt();
         if (requestingPrompt != null) message = requestingPrompt + ": " + message;
             
@@ -455,8 +456,12 @@ class CustomAuthenticator extends Authenticator {
                 CustomAuthenticator.KEY_STORE_PASSWORD,     // keyStorePassword
                 CustomAuthenticator.KEY_ALIAS,              // keyAlias 
                 "Authentication store",                     // dialogTitle 
-                "Do you want to create an authentication store for user names and passwords?", // messageCreateKey 
-                "Do you want to use the existing authentication store for user names and passwords?" // messageUseExistingKey 
+                (                                           // messageCreateKey 
+                    "Do you want to create an authentication store for user names and passwords?"
+                ),
+                (                                           // messageUseExistingKey 
+                    "Do you want to use the existing authentication store for user names and passwords?"
+                )
             );
             if (secretKey == null) {
                 result = PasswordAuthenticationStore.NOP;

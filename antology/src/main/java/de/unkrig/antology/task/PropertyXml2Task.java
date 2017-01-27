@@ -158,7 +158,7 @@ class PropertyXml2Task extends Task {
     private void
     execute2() throws ParserConfigurationException, TransformerException {
 
-        @SuppressWarnings("unchecked") Map<String, String> allProperties = this.getProject().getProperties();
+        Map<String, Object> allProperties = this.getProject().getProperties();
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder        documentBuilder        = documentBuilderFactory.newDocumentBuilder();
@@ -185,14 +185,14 @@ class PropertyXml2Task extends Task {
     }
 
     private static Element
-    createElement(Map<String, String> allProperties, String prefix, Document document) {
+    createElement(Map<String, Object> allProperties, String prefix, Document document) {
         document.createElement("company");
 
         String              elementName = null;
         Map<String, String> attributes  = new HashMap<String, String>();
-        for (Map.Entry<String, String> e : allProperties.entrySet()) {
+        for (Entry<String, Object> e : allProperties.entrySet()) {
             String propertyName  = e.getKey();
-            String propertyValue = e.getValue();
+            Object propertyValue = e.getValue();
 
             if (!propertyName.startsWith(prefix)) continue;
 
@@ -223,7 +223,7 @@ class PropertyXml2Task extends Task {
 
             String s = propertyName.substring(pos);
             if (s.startsWith("_")) {
-                attributes.put(s.substring(1), propertyValue);
+                attributes.put(s.substring(1), (String) propertyValue);
             }
         }
 
@@ -251,7 +251,7 @@ class PropertyXml2Task extends Task {
     }
 
     private static void
-    createSubelements(Map<String, String> allProperties, String prefix, Node parent, Document document) {
+    createSubelements(Map<String, Object> allProperties, String prefix, Node parent, Document document) {
 
         Set<Integer> indexes = new HashSet<Integer>();
         for (String propertyName : allProperties.keySet()) {
@@ -277,25 +277,25 @@ class PropertyXml2Task extends Task {
         for (int index : indexes2) {
             String prefix2 = prefix + index + '.';
 
-            String text = allProperties.get(prefix2 + '$');
+            String text = (String) allProperties.get(prefix2 + '$');
             if (text != null) {
                 parent.appendChild(document.createTextNode(text));
                 continue;
             }
 
-            String comment = allProperties.get(prefix2 + '#');
+            String comment = (String) allProperties.get(prefix2 + '#');
             if (comment != null) {
                 parent.appendChild(document.createComment(comment));
                 continue;
             }
 
-            String cdata = allProperties.get(prefix2 + '!');
+            String cdata = (String) allProperties.get(prefix2 + '!');
             if (cdata != null) {
                 parent.appendChild(document.createCDATASection(cdata));
                 continue;
             }
 
-            String pi = allProperties.get(prefix2 + '?');
+            String pi = (String) allProperties.get(prefix2 + '?');
             if (pi != null) {
                 int spc = pi.indexOf(' ');
                 if (spc == -1) throw new BuildException("Value of property \"" + prefix2 + "?\" lacks a space");

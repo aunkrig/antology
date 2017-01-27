@@ -26,52 +26,59 @@
 
 package test;
 
-import java.util.regex.Pattern;
-
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildFileRule;
+import org.junit.Before;
 import org.junit.ComparisonFailure;
+import org.junit.Rule;
 import org.junit.Test;
 
+import de.unkrig.commons.junit4.AssertRegex;
+import de.unkrig.commons.junit4.AssertString;
 import junit.framework.TestCase;
 
-// CHECKSTYLE JavadocMethod:OFF
+//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ForEach2Task}.
  */
 public
-class ForEach2Test extends BuildFileTest {
+class ForEach2Test {
 
-    @Override public void
-    setUp() { this.configureProject("target/test-classes/test_forEach2.ant"); }
+    @Rule public BuildFileRule
+    rule = new BuildFileRule();
+
+    @Before public void
+    setUp() {
+        this.rule.configureProject("target/test-classes/test_forEach2.ant");
+    }
 
     @Test public void
     test1() {
-        this.executeTarget("test1");
-        this.assertLogContaining("123");
+        this.rule.executeTarget("test1");
+        AssertString.assertContains("123", this.rule.getLog());
     }
 
     @Test public void
     test2() {
-        this.executeTarget("test2");
-        this.assertLogMatches(Pattern.compile("foo.betafoo.alpha|foo.alphafoo.beta"));
+        this.rule.executeTarget("test2");
+        AssertRegex.assertMatches("foo.betafoo.alpha|foo.alphafoo.beta", this.rule.getLog());
     }
 
     @Test public void
     test3() {
-        this.executeTarget("test3");
-        TestCase.assertEquals("12", this.getLog());
+        this.rule.executeTarget("test3");
+        TestCase.assertEquals("12", this.rule.getLog());
     }
 
     @Test public void
     test4() {
-        this.executeTarget("test4");
-        TestCase.assertEquals("13", this.getLog());
+        this.rule.executeTarget("test4");
+        TestCase.assertEquals("13", this.rule.getLog());
     }
 
     @Test public void
     test5() {
-        this.executeTarget("test5");
+        this.rule.executeTarget("test5");
         TestCase.assertEquals((
             ""
             + "Processing '1' (1 of 3 elements = 33.3%)"
@@ -90,12 +97,12 @@ class ForEach2Test extends BuildFileTest {
             + "... done! Took 500ms (1 element @ 2 elements/s"
             + "; 3 of 3 elements complete = 100.0% @ 2 elements/s"
             + ")"
-        ), this.getLog());
+        ), this.rule.getLog());
     }
 
     @Test public void
     test6() {
-        this.executeTarget("test6");
+        this.rule.executeTarget("test6");
         TestCase.assertEquals((
             ""
             + "Processing 'A' (10 of 60 bytes = 16.7%)"
@@ -114,12 +121,12 @@ class ForEach2Test extends BuildFileTest {
             + "... done! Took 5s (30 bytes @ 6 bytes/s"
             + "; 60 of 60 bytes complete = 100.0% @ 4 bytes/s"
             + ")"
-        ), this.getLog());
+        ), this.rule.getLog());
     }
 
     @Test public void
     test7() {
-        this.executeTarget("test7");
+        this.rule.executeTarget("test7");
         TestCase.assertEquals((
             ""
             + "Processing 'A' (10 of 60 bytes = 16.7%)"
@@ -138,12 +145,12 @@ class ForEach2Test extends BuildFileTest {
             + "... done! Took 500ms (30 bytes @ 60 bytes/s"
             + "; 60 of 60 bytes complete = 100.0% @ 40 bytes/s"
             + ")"
-        ), this.getLog());
+        ), this.rule.getLog());
     }
 
     @Test public void
     test8() {
-        this.executeTarget("test8");
+        this.rule.executeTarget("test8");
         TestCase.assertEquals((
             ""
             + "Processing 'target/test-classes/test_forEach2/ALPHA.txt' (5 of 17 bytes = 29.4%)"
@@ -165,44 +172,36 @@ class ForEach2Test extends BuildFileTest {
             + "| Three"
             + "... done! Took 500ms (7 bytes @ 14 bytes/s"
             + "; 17 of 17 bytes complete = 100.0% @ 11 bytes/s)"
-        ), this.getLog());
+        ), this.rule.getLog());
     }
 
     @Test public void
     test9() {
-        this.executeTarget("test9");
+        this.rule.executeTarget("test9");
 
         TestCase.assertEquals(
             "message_defaultmessage_errormessage_warningmessage_info",
-            this.getLog()
+            this.rule.getLog()
         );
         TestCase.assertEquals(
             "",
-            this.getError()
+            this.rule.getError()
         );
         this.assertContains(
             "Build sequence for target(s) `test9' is",
-            this.getFullLog()
+            this.rule.getFullLog()
         );
         this.assertContains(
             "message_defaultmessage_errormessage_warningmessage_infomessage_verbosemessage_debug",
-            this.getFullLog()
+            this.rule.getFullLog()
         );
-        TestCase.assertEquals("",  this.getOutput());
+        TestCase.assertEquals("", this.rule.getOutput());
     }
 
     public void
     assertContains(String expectedSubstring, String actual) {
         if (!actual.contains(expectedSubstring)) {
             throw new ComparisonFailure(null, expectedSubstring, actual);
-        }
-    }
-
-    public void
-    assertLogMatches(Pattern regex) {
-        String log = this.getLog();
-        if (!regex.matcher(log).find()) {
-            TestCase.fail("expecting log to contain '" + regex + "' log was '" + log + "'");
         }
     }
 }
