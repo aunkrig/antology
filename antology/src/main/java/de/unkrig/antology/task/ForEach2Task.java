@@ -152,10 +152,12 @@ class ForEach2Task extends Task {
     /**
      * The default value for the {@link #setDelimiter(String)}.
      */
-    public static final String DEFAULT_DELIMITER = ", \t\r\n";
+    public static final String  DEFAULT_DELIMITER = ",";
+    public static final boolean DEFAULT_TRIM      = true;
 
     @Nullable private String      param;
     private String                delimiter = ForEach2Task.DEFAULT_DELIMITER;
+    private boolean               trim      = ForEach2Task.DEFAULT_TRIM;
     private Iterable<?>           iterable  = ForEach2Task.DEFAULT_ITERABLE;
     @Nullable private MacroDef    macroDef;
     private boolean               keepGoing;
@@ -201,6 +203,15 @@ class ForEach2Task extends Task {
      */
     public void
     setDelimiter(String delimiterCharacters) { this.delimiter = delimiterCharacters; }
+
+    /**
+     * Whether the elements of the iteration, if they are strings, should silently be trimmed, i.e. leading and
+     * trailing whitespace be removed.
+     * 
+     * @ant.defaultValue {@value DEFAULT_TRIM}
+     */
+    public void
+    setTrim(boolean value) { this.trim = value; }
 
     /**
      * Iterate over the values "1", "2", "3", ... "<var>N</var>".
@@ -541,6 +552,8 @@ class ForEach2Task extends Task {
         for (Object element : this.iterable) {
             assert element != null;
 
+            if (this.trim && element instanceof String) element = ((String) element).trim();
+            
             prePost.pre(element);
 
             MacroInstance instance = new MacroInstance();
