@@ -207,7 +207,7 @@ class ForEach2Task extends Task {
     /**
      * Whether the elements of the iteration, if they are strings, should silently be trimmed, i.e. leading and
      * trailing whitespace be removed.
-     * 
+     *
      * @ant.defaultValue {@value #DEFAULT_TRIM}
      */
     public void
@@ -553,7 +553,7 @@ class ForEach2Task extends Task {
             assert element != null;
 
             if (this.trim && element instanceof String) element = ((String) element).trim();
-            
+
             prePost.pre(element);
 
             MacroInstance instance = new MacroInstance();

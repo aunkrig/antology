@@ -46,7 +46,7 @@ import junit.framework.TestCase;
  */
 public
 class Retry2Test {
-    
+
     @Rule public BuildFileRule
     rule = new BuildFileRule();
 

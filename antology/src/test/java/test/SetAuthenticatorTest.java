@@ -61,7 +61,7 @@ class SetAuthenticatorTest {
             this.rule.getError()
         );
     }
-    
+
     @Test public void
     dummyTest() {}
 }

@@ -50,7 +50,7 @@ import de.unkrig.commons.nullanalysis.Nullable;
  */
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
-    
+
     private CacheMode                   cacheMode   = CacheMode.USER_NAMES_AND_PASSWORDS;
     private StoreMode                   storeMode   = StoreMode.NONE;
     private final List<CredentialsSpec> credentials = new ArrayList<CredentialsSpec>();
@@ -71,13 +71,13 @@ class SetAuthenticatorTask extends Task implements Destroyable {
      */
     public void
     setCache(CacheMode value) { this.cacheMode = value; }
-    
+
     /**
      * @ant.defaultValue NONE
      */
     public void
     setStore(StoreMode value) { this.storeMode = value; }
-    
+
     /**
      * Every time a server requests user name/password authentication, the {@code <credentials>} subelements are
      * checked, and the <b>first</b> that matches the request determines the user name and password.
@@ -96,18 +96,18 @@ class SetAuthenticatorTask extends Task implements Destroyable {
 
     @Override public void
     execute() {
-        
+
         if (this.destroyed) throw new IllegalStateException();
 
         synchronized (SetAuthenticatorTask.class) {
-            
+
             // Install the "MyAuthenticator" exactly ONCE.
             CustomAuthenticator ma = SetAuthenticatorTask.myAuthenticator;
             if (ma == null) {
                 ma = (SetAuthenticatorTask.myAuthenticator = new CustomAuthenticator(this.cacheMode, this.storeMode));
                 Authenticator.setDefault(ma);
             }
-            
+
             // Add the configured credentials to the MyAuthenticator.
             ma.addCredentials(this.credentials);
         }

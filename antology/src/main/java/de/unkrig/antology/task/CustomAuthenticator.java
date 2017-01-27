@@ -62,9 +62,9 @@ import de.unkrig.commons.nullanalysis.Nullable;
  */
 public
 class CustomAuthenticator extends Authenticator {
-    
+
     public enum CacheMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
-    
+
     public enum StoreMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
 
     public static final
@@ -165,14 +165,14 @@ class CustomAuthenticator extends Authenticator {
          */
         public void
         setPassword(@Nullable DestroyableString password) {
-            
+
             if (password != null && (password.length() == 0 || (password.length() == 1 && password.charAt(0) == '-'))) {
                 password.destroy();
                 password = null;
-            } 
+            }
 
             if (this.password != null) this.password.destroy();
-            
+
             this.password = password;
         }
 
@@ -215,7 +215,7 @@ class CustomAuthenticator extends Authenticator {
     private final CacheMode             cacheMode;
     private final StoreMode             storeMode;
     private final List<CredentialsSpec> credentials = new ArrayList<CustomAuthenticator.CredentialsSpec>();
-    
+
     private final Map<Object, PasswordAuthentication> cache = new HashMap<Object, PasswordAuthentication>();
 
     /**
@@ -223,22 +223,22 @@ class CustomAuthenticator extends Authenticator {
      * asking for the "master password".
      */
     @Nullable private PasswordAuthenticationStore passwordStore;
-    
+
     private static final File
     KEY_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_keystore");
-    
+
     private static final char[]
     KEY_STORE_PASSWORD = new char[0];
-    
+
     private static final String
     KEY_ALIAS = "setAuthenticatorKey";
-    
+
     private static final File
     CREDENTIALS_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_credentials");
-    
+
     private static final String
     CREDENTIALS_STORE_COMMENTS = " The credentials store of the <setAuthenticator> task of http://antology.unkrig.de.";
-    
+
     public
     CustomAuthenticator(CacheMode cacheMode, StoreMode storeMode) {
         this.cacheMode = cacheMode;
@@ -247,9 +247,9 @@ class CustomAuthenticator extends Authenticator {
 
     public void
     addCredentials(Collection<CustomAuthenticator.CredentialsSpec> credentials) {
-        
+
         for (CustomAuthenticator.CredentialsSpec newCe : credentials) {
-            
+
             // Avoid adding duplicate credentials specs.
             if (!this.credentials.contains(newCe)) this.credentials.add(newCe);
         }
@@ -261,7 +261,7 @@ class CustomAuthenticator extends Authenticator {
         // Search for the first applicable "<credentials>" subelement.
 
         String userName = null;
-        
+
         for (CustomAuthenticator.CredentialsSpec ce : this.credentials) {
 
             if (
@@ -278,7 +278,7 @@ class CustomAuthenticator extends Authenticator {
                 if (userName != null) {
                     CharSequence passwordCs = ce.password;
                     if (passwordCs != null) {
-                        
+
                         // The matching <credentials> subelement declares BOTH user name AND password;
                         // return that tuple without any user interaction.
                         return new PasswordAuthentication(userName, CustomAuthenticator.toCharArray(passwordCs));
@@ -306,18 +306,18 @@ class CustomAuthenticator extends Authenticator {
         // Check the authentication cache.
         DestroyableString password = null;
         switch (this.cacheMode) {
-        
+
         case NONE:
             ;
             break;
-            
+
         case USER_NAMES:
             synchronized (this.cache) {
                 PasswordAuthentication result = this.cache.get(key);
                 if (result != null) userName = result.getUserName();
             }
             break;
-            
+
         case USER_NAMES_AND_PASSWORDS:
             synchronized (this.cache) {
                 PasswordAuthentication result = this.cache.get(key);
@@ -328,18 +328,18 @@ class CustomAuthenticator extends Authenticator {
             }
             break;
         }
-        
+
         // Check the authentication store.
         switch (this.storeMode) {
-        
+
         case NONE:
             ;
             break;
-            
+
         case USER_NAMES:
             if (userName == null) userName = this.getPasswordStore().getUserName(key);
             break;
-            
+
         case USER_NAMES_AND_PASSWORDS:
             if (userName == null) {
                 userName = this.getPasswordStore().getUserName(key);
@@ -357,18 +357,18 @@ class CustomAuthenticator extends Authenticator {
 
         JPasswordField passwordField = new JPasswordField();
         if (password != null) passwordField.setText(new String(password.toCharArray()));
-        
+
         CustomAuthenticator.focussify(userName != null && password == null ? passwordField : userNameField);
 
         String message          = key;
         String requestingPrompt = this.getRequestingPrompt();
         if (requestingPrompt != null) message = requestingPrompt + ": " + message;
-            
+
         String title = (
             this.getRequestingProtocol().toUpperCase()
             + (this.getRequestorType() == RequestorType.PROXY ? " Proxy Authentication" : " Authentication")
         );
-        
+
         if (JOptionPane.showOptionDialog(
             null,                         // parentComponent
             new Object[] {                // message
@@ -387,7 +387,7 @@ class CustomAuthenticator extends Authenticator {
         ) != JOptionPane.OK_OPTION) return null;
 
         userName = userNameField.getText();
-        
+
         if (password != null) password.destroy();
         password = new DestroyableString(passwordField.getPassword());
 
@@ -397,38 +397,38 @@ class CustomAuthenticator extends Authenticator {
             result = new PasswordAuthentication(userName, passwordCa);
             Arrays.fill(passwordCa, '\0');
         }
-        
+
         switch (this.cacheMode) {
-        
+
         case NONE:
             ;
             break;
-          
+
         case USER_NAMES:
             synchronized (this.cache) {
                 this.cache.put(key, new PasswordAuthentication(userName, null));
             }
             break;
-            
+
         case USER_NAMES_AND_PASSWORDS:
             synchronized (this.cache) {
                 this.cache.put(key, result);
             }
             break;
         }
-        
+
         try {
-            
+
             switch (this.storeMode) {
-            
+
             case NONE:
                 this.getPasswordStore().remove(key);
                 break;
-                
+
             case USER_NAMES:
                 this.getPasswordStore().put(key, userName);
                 break;
-                
+
             case USER_NAMES_AND_PASSWORDS:
                 this.getPasswordStore().put(key, userName, password);
                 break;
@@ -438,13 +438,13 @@ class CustomAuthenticator extends Authenticator {
         }
 
         password.destroy();
-        
+
         return result;
     }
 
     private PasswordAuthenticationStore
     getPasswordStore() {
-        
+
         PasswordAuthenticationStore result = this.passwordStore;
         if (result != null) return result;
 
@@ -454,12 +454,12 @@ class CustomAuthenticator extends Authenticator {
             SecretKey secretKey = SecretKeys.adHocSecretKey(
                 CustomAuthenticator.KEY_STORE_FILE,         // keyStoreFile
                 CustomAuthenticator.KEY_STORE_PASSWORD,     // keyStorePassword
-                CustomAuthenticator.KEY_ALIAS,              // keyAlias 
-                "Authentication store",                     // dialogTitle 
-                (                                           // messageCreateKey 
+                CustomAuthenticator.KEY_ALIAS,              // keyAlias
+                "Authentication store",                     // dialogTitle
+                (                                           // messageCreateKey
                     "Do you want to create an authentication store for user names and passwords?"
                 ),
-                (                                           // messageUseExistingKey 
+                (                                           // messageUseExistingKey
                     "Do you want to use the existing authentication store for user names and passwords?"
                 )
             );
@@ -481,26 +481,26 @@ class CustomAuthenticator extends Authenticator {
         } catch (Exception e) {
             result = PasswordAuthenticationStore.NOP;
         }
-        
+
         return (this.passwordStore = result);
     }
 
     private static void
     focussify(JComponent component) {
-    
+
         // This is tricky... see
         //    http://tips4java.wordpress.com/2010/03/14/dialog-focus/
         component.addAncestorListener(new AncestorListener() {
-    
+
             @Override public void
             ancestorAdded(@Nullable AncestorEvent event) {
                 assert event != null;
                 JComponent component = event.getComponent();
                 component.requestFocusInWindow();
-    
+
                 component.removeAncestorListener(this);
             }
-    
+
             @Override public void ancestorRemoved(@Nullable AncestorEvent event) {}
             @Override public void ancestorMoved(@Nullable AncestorEvent event)   {}
         });
@@ -509,7 +509,7 @@ class CustomAuthenticator extends Authenticator {
     private static char[]
     toCharArray(CharSequence cs) {
         int l = cs.length();
-        
+
         char[] result = new char[l];
         for (int i = 0; i < l; i++) result[i] = cs.charAt(i);
         return result;
