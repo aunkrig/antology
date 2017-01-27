@@ -225,7 +225,7 @@ class CustomAuthenticator extends Authenticator {
     @Nullable private PasswordAuthenticationStore passwordStore;
 
     private static final File
-    KEY_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_keystore");
+    KEY_STORE_FILE = new File(System.getProperty("user.home"), ".customAuthenticator_keystore");
 
     private static final char[]
     KEY_STORE_PASSWORD = new char[0];
@@ -234,10 +234,10 @@ class CustomAuthenticator extends Authenticator {
     KEY_ALIAS = "setAuthenticatorKey";
 
     private static final File
-    CREDENTIALS_STORE_FILE = new File(System.getProperty("user.home"), ".antology_setAuthenticator_credentials");
+    CREDENTIALS_STORE_FILE = new File(System.getProperty("user.home"), ".customAuthenticator_credentials");
 
     private static final String
-    CREDENTIALS_STORE_COMMENTS = " The credentials store of the <setAuthenticator> task of http://antology.unkrig.de.";
+    CREDENTIALS_STORE_COMMENTS = " The credentials store of the CustomAuthenticator of http://antology.unkrig.de.";
 
     public
     CustomAuthenticator(CacheMode cacheMode, StoreMode storeMode) {
