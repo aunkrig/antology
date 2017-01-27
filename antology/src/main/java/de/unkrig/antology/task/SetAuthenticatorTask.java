@@ -27,6 +27,7 @@
 package de.unkrig.antology.task;
 
 import java.net.Authenticator;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,16 +35,66 @@ import javax.security.auth.Destroyable;
 import javax.swing.JOptionPane;
 
 import org.apache.tools.ant.Task;
+import org.apache.tools.ant.taskdefs.optional.net2.FTP2;
 
 import de.unkrig.antology.task.CustomAuthenticator.CacheMode;
 import de.unkrig.antology.task.CustomAuthenticator.CredentialsSpec;
 import de.unkrig.antology.task.CustomAuthenticator.StoreMode;
+import de.unkrig.antology.util.Regex;
 import de.unkrig.commons.lang.security.DestroyableString;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
  * Installs an {@link Authenticator} whichs determines user name and password through its configuration, or prompts the
  * user interactively for user name and password through a SWING {@link JOptionPane}.
+ * <p>
+ *   An "authenticator" is used by all JRE {@link URLConnection}s when a host asks for authentication, e.g. HTTP
+ *   "401:Unauthorized" and "407: Proxy Authentication Required". Also the {@link FTP2} task uses the authenticator for
+ *   server authentication and proxy authentication.
+ * </p>
+ * <p>
+ *   The exact strategy of this authenticator is as follows:
+ * </p>
+ * <ul>
+ *   <li>
+ *     The authentication request is matched against the {@link CredentialsSpec#setRequestingHost(Regex)}, {@link
+ *     CredentialsSpec#setRequestingSite(Regex)}, {@link CredentialsSpec#setRequestingPort(Regex)}, {@link
+ *     CredentialsSpec#setRequestingProtocol(Regex)}, {@link CredentialsSpec#setRequestingPrompt(Regex)}, {@link
+ *     CredentialsSpec#setRequestingScheme(Regex)}, {@link CredentialsSpec#setRequestingURL(Regex)} and {@link
+ *     CredentialsSpec#setRequestorType(Regex)} of all {@link CredentialsSpec} subelements,
+ *     in the given order. This process stops at the first match.
+ *   </li>
+ *   <li>
+ *     If the matching {@link #addConfiguredCredentials(CredentialsSpec)} subelement has both {@link
+ *     CredentialsSpec#setUserName(String)} <em>and</em> {@link CredentialsSpec#setPassword(DestroyableString)}
+ *     configured, then that user name-password pair is returned.
+ *   </li>
+ *   <li>
+ *     Otherwise the user is prompted with a {@link JOptionPane} dialog for a user name and a password. (Iff the
+ *     matching {@link #addConfiguredCredentials(CredentialsSpec)} subelement configured a {@link
+ *     CredentialsSpec#setUserName(String)}, then that user name is pre-filled in.)
+ *   </li>
+ *   <li>
+ *     After the user has filled in the missing data, the user name and password are returned.
+ *   </li>
+ * </ul>
+ * <p>
+ *   Iff {@link #setCache(CacheMode)} is set to a value different from {@link CacheMode#NONE}, then the entered
+ *   user name and/or password are remembered and pre-filled in the next time the authentication dialog pops up.
+ *   The "remembered" data is not persisted and is lost when the JVM terminates.
+ * </p>
+ * <p>
+ *   Iff {@link #setStore(StoreMode)} is set to a value different from {@link StoreMode#NONE}, then the entered
+ *   user name and/or password are stored in a persistent "authentication store". That store is a properties file in
+ *   the user's home directory, and the passwords stored therein are encrypted with a secret key, which is
+ *   generated ad hoc and stored in another file in the user's home directory (the "key store"). The secret key is
+ *   protected by a password (called the "master password"), so that an attacker can not compromise the passwords in
+ *   the authentication store, even if he steals the key store file.
+ * </p>
+ * <p>
+ *   When the secret key is created, the user is prompted to choose the master password. When a different JVM instance
+ *   requires the secret key, it prompts the user to enter the master password.
+ * </p>
  *
  * @see Authenticator#setDefault(Authenticator)
  * @see #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)
@@ -51,8 +102,11 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
 
-    private CacheMode                   cacheMode   = CacheMode.USER_NAMES_AND_PASSWORDS;
-    private StoreMode                   storeMode   = StoreMode.NONE;
+    private static final StoreMode DEFAULT_STORE_MODE = StoreMode.NONE;
+    private static final CacheMode DEFAULT_CACHE_MODE = CacheMode.USER_NAMES_AND_PASSWORDS;
+    
+    private CacheMode                   cacheMode   = DEFAULT_CACHE_MODE;
+    private StoreMode                   storeMode   = DEFAULT_STORE_MODE;
     private final List<CredentialsSpec> credentials = new ArrayList<CredentialsSpec>();
 
     private boolean destroyed;
@@ -67,23 +121,24 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     isDestroyed() { return this.destroyed; }
 
     /**
-     * @ant.defaultValue USER_NAMES_AND_PASSWORDS
+     * @ant.defaultValue {@link #DEFAULT_CACHE_MODE}
      */
     public void
     setCache(CacheMode value) { this.cacheMode = value; }
 
     /**
-     * @ant.defaultValue NONE
+     * @ant.defaultValue {@link #DEFAULT_STORE_MODE}
      */
     public void
     setStore(StoreMode value) { this.storeMode = value; }
 
     /**
-     * Every time a server requests user name/password authentication, the {@code <credentials>} subelements are
-     * checked, and the <b>first</b> that matches the request determines the user name and password.
+     * Every time a server requests user name/password authentication, the {@link
+     * #addConfiguredCredentials(CredentialsSpec)} subelements are checked, and the <b>first</b> that matches the
+     * request determines the user name and password.
      * <p>
-     *   A {@code <credentials>} element matches iff the requesting host, site, port, protocol, url, scheme and/or
-     *   requestor type match the respective attributes.
+     *   A {@link #addConfiguredCredentials(CredentialsSpec)} subelement matches iff the requesting host, site, port,
+     *   protocol, url, scheme and/or requestor type match the respective attributes.
      * </p>
      * <p>
      *   If no {@link CredentialsSpec#setUserName(String) user name} and/or no {@link
