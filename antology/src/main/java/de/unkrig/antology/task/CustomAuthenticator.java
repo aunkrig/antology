@@ -80,6 +80,7 @@ class CustomAuthenticator extends Authenticator {
         @Nullable private Regex             requestorType;
         @Nullable private String            userName;
         @Nullable private DestroyableString password;
+        private boolean                     deny;
 
         private boolean destroyed;
 
@@ -158,6 +159,13 @@ class CustomAuthenticator extends Authenticator {
         setUserName(String userName) {
             if (!userName.isEmpty() && !"-".equals(userName)) this.userName = userName;
         }
+        
+        /**
+         * If set to {@code true}, then {@link #setUserName(String)} and {@link #setPassword(DestroyableString)} are
+         * ignored, and authentication is <em>denied</em> for this spec.
+         */
+        public void
+        setDeny(boolean value) { this.deny = value; }
 
         /**
          * The password to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
@@ -189,6 +197,7 @@ class CustomAuthenticator extends Authenticator {
                 + ObjectUtil.hashCode(this.requestorType)
                 + ObjectUtil.hashCode(this.userName)
                 + ObjectUtil.hashCode(this.password)
+                + (this.deny ? 1234 : 789312568)
             );
         }
 
@@ -208,6 +217,7 @@ class CustomAuthenticator extends Authenticator {
                 && ObjectUtil.equals(this.requestorType,      that.requestorType)
                 && ObjectUtil.equals(this.userName,           that.userName)
                 && ObjectUtil.equals(this.password,           that.password)
+                && this.deny == that.deny
             );
         }
     }
@@ -274,6 +284,9 @@ class CustomAuthenticator extends Authenticator {
                 && CustomAuthenticator.matches(ce.requestingUrl,      this.getRequestingURL())
                 && CustomAuthenticator.matches(ce.requestorType,      this.getRequestorType())
             ) {
+                
+                if (ce.deny) return null;
+                
                 userName = ce.userName;
                 if (userName != null) {
                     CharSequence passwordCs = ce.password;
