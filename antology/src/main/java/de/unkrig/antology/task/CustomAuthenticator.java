@@ -290,15 +290,34 @@ class CustomAuthenticator extends Authenticator {
      *   <dt>{0}</dt>
      *   <dd>
      *     The "key" to the authentication, which is composed like this:<br />
-     *     <var>RequestorType</var>{@code /}<var>RequestingProtocol</var>{@code /}<var>RequestingHost</var>{@code
-     *     /}<var>RequestingPort</var>{@code /}<var>RequestingScheme</var>{@code /}</br>
+     *     <var>requestor-type</var>{@code /}<var>requesting-protocol</var>{@code /}<var>requesting-host</var>{@code
+     *     /}<var>requesting-port</var>{@code /}<var>requesting-scheme</var>{@code /}</br>
      *     Example value: {@code "PROXY/http/proxy.company.com/8080/Company internet proxy"}
      *   </dd>
      *   
-     *   <dt>{1}</dt>
-     *   <dd>
-     *     The prompt string given by the requestor, see {@link Authenticator#getRequestingPrompt()}.
-     *   </dd>
+     *   <dt>{1}, {2}</dt>
+     *   <dd>The requesting host; see {@link #getRequestingHost()}</dd>
+     *   
+     *   <dt>{3}, {4}</dt>
+     *   <dd>The requesting site; see {@link #getRequestingSite()}</dd>
+     *   
+     *   <dt>{5}, {6}</dt>
+     *   <dd>The requesting port; see {@link #getRequestingPort()}</dd>
+     *   
+     *   <dt>{7}, {8}</dt>
+     *   <dd>The requesting protocol; see {@link #getRequestingProtocol()}</dd>
+     *   
+     *   <dt>{9}, {10}</dt>
+     *   <dd>The requesting prompt; see {@link #getRequestingPrompt()}</dd>
+     *   
+     *   <dt>{11}, {12}</dt>
+     *   <dd>The requesting scheme; see {@link #getRequestingScheme()}</dd>
+     *   
+     *   <dt>{13}, {14}</dt>
+     *   <dd>The requesting URL; see {@link #getRequestingURL()}</dd>
+     *   
+     *   <dt>{15}, {16}</dt>
+     *   <dd>The requestor type; see {@link #getRequestorType()}</dd>
      * </dl>
      */
     public void

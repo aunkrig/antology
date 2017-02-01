@@ -28,6 +28,7 @@ package de.unkrig.antology.task;
 
 import java.net.Authenticator;
 import java.net.URLConnection;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,13 +66,13 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *     in the given order. This process stops at the first match.
  *   </li>
  *   <li>
- *     If the matching {@link #addConfiguredCredentials(CredentialsSpec)} subelement has both {@link
- *     CredentialsSpec#setUserName(String)} <em>and</em> {@link CredentialsSpec#setPassword(char[])}
+ *     If the matching {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement has both
+ *     {@link CredentialsSpec#setUserName(String)} <em>and</em> {@link CredentialsSpec#setPassword(char[])}
  *     configured, then that user name-password pair is returned.
  *   </li>
  *   <li>
  *     Otherwise the user is prompted with a {@link JOptionPane} dialog for a user name and a password. (Iff the
- *     matching {@link #addConfiguredCredentials(CredentialsSpec)} subelement configured a {@link
+ *     matching {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement configured a {@link
  *     CredentialsSpec#setUserName(String)}, then that user name is pre-filled in.)
  *   </li>
  *   <li>
@@ -79,17 +80,17 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *   </li>
  * </ul>
  * <p>
- *   Iff {@link #setCache(CacheMode)} is set to a value different from {@link CacheMode#NONE}, then the entered
- *   user name and/or password are remembered and pre-filled in the next time the authentication dialog pops up.
- *   The "remembered" data is not persisted and is lost when the JVM terminates.
+ *   Iff {@link #setCache(CustomAuthenticator.CacheMode)} is set to a value different from {@link CacheMode#NONE}, then
+ *   the entered user name and/or password are remembered and pre-filled in the next time the authentication dialog
+ *   pops up. The "remembered" data is not persisted and is lost when the JVM terminates.
  * </p>
  * <p>
- *   Iff {@link #setStore(StoreMode)} is set to a value different from {@link StoreMode#NONE}, then the entered
- *   user name and/or password are stored in a persistent "authentication store". That store is a properties file in
- *   the user's home directory, and the passwords stored therein are encrypted with a secret key, which is
- *   generated ad hoc and stored in another file in the user's home directory (the "key store"). The secret key is
- *   protected by a password (called the "master password"), so that an attacker can not compromise the passwords in
- *   the authentication store, even if he steals the key store file.
+ *   Iff {@link #setStore(CustomAuthenticator.StoreMode)} is set to a value different from {@link StoreMode#NONE}, then
+ *   the entered user name and/or password are stored in a persistent "authentication store". That store is a
+ *   properties file in the user's home directory, and the passwords stored therein are encrypted with a secret key,
+ *   which is generated ad hoc and stored in another file in the user's home directory (the "key store"). The secret
+ *   key is protected by a password (called the "master password"), so that an attacker can not compromise the
+ *   passwords in the authentication store, even if he steals the key store file.
  * </p>
  * <p>
  *   When the secret key is created, the user is prompted to choose the master password. When a different JVM instance
@@ -102,11 +103,12 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
 
-    private static final StoreMode DEFAULT_STORE_MODE = StoreMode.NONE;
-    private static final CacheMode DEFAULT_CACHE_MODE = CacheMode.USER_NAMES_AND_PASSWORDS;
+    public static final String DEFAULT_STORE_MODE = "NONE";
+    public static final String DEFAULT_CACHE_MODE = "USER_NAMES_AND_PASSWORDS";
     
-    private CacheMode                   cacheMode   = DEFAULT_CACHE_MODE;
-    private StoreMode                   storeMode   = DEFAULT_STORE_MODE;
+    @Nullable private String            dialogLabel;
+    private CacheMode                   cacheMode   = CacheMode.valueOf(DEFAULT_CACHE_MODE);
+    private StoreMode                   storeMode   = StoreMode.valueOf(DEFAULT_STORE_MODE);
     private final List<CredentialsSpec> credentials = new ArrayList<CredentialsSpec>();
 
     private boolean destroyed;
@@ -121,29 +123,71 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     isDestroyed() { return this.destroyed; }
 
     /**
-     * @ant.defaultValue {@link #DEFAULT_CACHE_MODE}
+     * The text of the label in the authentication dialog.
+     * <p>
+     *   The following arguments are replaced within the message:
+     * </p>
+     * <dl>
+     *   <dt>{0}</dt>
+     *   <dd>
+     *     The "key" to the authentication, which is composed like this:<br />
+     *     <var>requestor-type</var>{@code /}<var>requesting-protocol</var>{@code /}<var>requesting-host</var>{@code
+     *     /}<var>requesting-port</var>{@code /}<var>requesting-scheme</var>{@code /}</br>
+     *     Example value: {@code "PROXY/http/proxy.company.com/8080/Company internet proxy"}
+     *   </dd>
+     *   
+     *   <dt>{1}, {2}</dt>
+     *   <dd>The requesting host</dd>
+     *   
+     *   <dt>{3}, {4}</dt>
+     *   <dd>The requesting site</dd>
+     *   
+     *   <dt>{5}, {6}</dt>
+     *   <dd>The requesting port</dd>
+     *   
+     *   <dt>{7}, {8}</dt>
+     *   <dd>The requesting protocol</dd>
+     *   
+     *   <dt>{9}, {10}</dt>
+     *   <dd>The requesting prompt</dd>
+     *   
+     *   <dt>{11}, {12}</dt>
+     *   <dd>The requesting scheme</dd>
+     *   
+     *   <dt>{13}, {14}</dt>
+     *   <dd>The requesting URL</dd>
+     *   
+     *   <dt>{15}, {16}</dt>
+     *   <dd>The requestor type</dd>
+     * </dl>
+     */
+    public void
+    setDialogLabel(String value) { this.dialogLabel = value; }
+
+    /**
+     * @ant.defaultValue {@value #DEFAULT_CACHE_MODE}
      */
     public void
     setCache(CacheMode value) { this.cacheMode = value; }
 
     /**
-     * @ant.defaultValue {@link #DEFAULT_STORE_MODE}
+     * @ant.defaultValue {@value #DEFAULT_STORE_MODE}
      */
     public void
     setStore(StoreMode value) { this.storeMode = value; }
 
     /**
      * Every time a server requests user name/password authentication, the {@link
-     * #addConfiguredCredentials(CredentialsSpec)} subelements are checked, and the <b>first</b> that matches the
-     * request determines the user name and password.
+     * #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelements are checked, and the <b>first</b>
+     * that matches the request determines the user name and password.
      * <p>
-     *   A {@link #addConfiguredCredentials(CredentialsSpec)} subelement matches iff the requesting host, site, port,
-     *   protocol, url, scheme and/or requestor type match the respective attributes.
+     *   A {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement matches iff the requesting
+     *   host, site, port, protocol, url, scheme and/or requestor type match the respective attributes.
      * </p>
      * <p>
      *   If no {@link CredentialsSpec#setUserName(String) user name} and/or no {@link
-     *   CredentialsSpec#setPassword(char[]) password} are configured, then the user is prompted for the
-     *   missing user name and/or password.
+     *   CustomAuthenticator.CredentialsSpec#setPassword(char[]) password} are configured, then the user is prompted
+     *   for the missing user name and/or password.
      * </p>
      */
     public void
@@ -160,6 +204,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
             CustomAuthenticator ma = SetAuthenticatorTask.myAuthenticator;
             if (ma == null) {
                 ma = (SetAuthenticatorTask.myAuthenticator = new CustomAuthenticator(this.cacheMode, this.storeMode));
+                if (this.dialogLabel != null) ma.setDialogLabel(this.dialogLabel);
                 Authenticator.setDefault(ma);
             }
 
