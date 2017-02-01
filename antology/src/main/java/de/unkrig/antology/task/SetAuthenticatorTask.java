@@ -41,7 +41,7 @@ import de.unkrig.antology.task.CustomAuthenticator.CacheMode;
 import de.unkrig.antology.task.CustomAuthenticator.CredentialsSpec;
 import de.unkrig.antology.task.CustomAuthenticator.StoreMode;
 import de.unkrig.antology.util.Regex;
-import de.unkrig.commons.lang.security.DestroyableString;
+import de.unkrig.commons.lang.security.SecureCharsets;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -66,7 +66,7 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *   </li>
  *   <li>
  *     If the matching {@link #addConfiguredCredentials(CredentialsSpec)} subelement has both {@link
- *     CredentialsSpec#setUserName(String)} <em>and</em> {@link CredentialsSpec#setPassword(DestroyableString)}
+ *     CredentialsSpec#setUserName(String)} <em>and</em> {@link CredentialsSpec#setPassword(char[])}
  *     configured, then that user name-password pair is returned.
  *   </li>
  *   <li>
@@ -142,7 +142,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
      * </p>
      * <p>
      *   If no {@link CredentialsSpec#setUserName(String) user name} and/or no {@link
-     *   CredentialsSpec#setPassword(DestroyableString) password} are configured, then the user is prompted for the
+     *   CredentialsSpec#setPassword(char[]) password} are configured, then the user is prompted for the
      *   missing user name and/or password.
      * </p>
      */

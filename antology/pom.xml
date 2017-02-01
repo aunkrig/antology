@@ -56,27 +56,27 @@
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-lang</artifactId>
-    	<version>1.2.8</version>
+    	<version>1.2.9</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-nullanalysis</artifactId>
-    	<version>1.2.8</version>
+    	<version>1.2.9</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-util</artifactId>
-    	<version>1.2.8</version>
+    	<version>1.2.9</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-net</artifactId>
-    	<version>1.2.8</version>
+    	<version>1.2.9</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-junit4</artifactId>
-    	<version>1.2.8</version>
+    	<version>1.2.9</version>
     	<scope>test</scope>
     </dependency>
     <dependency>

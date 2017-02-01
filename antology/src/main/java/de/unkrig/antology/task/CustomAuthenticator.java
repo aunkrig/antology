@@ -31,9 +31,11 @@ import java.io.IOException;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.PasswordAuthentication;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +56,7 @@ import de.unkrig.commons.lang.ObjectUtil;
 import de.unkrig.commons.lang.crypto.PasswordAuthenticationStore;
 import de.unkrig.commons.lang.crypto.PasswordAuthenticationStores;
 import de.unkrig.commons.lang.crypto.SecretKeys;
-import de.unkrig.commons.lang.security.DestroyableString;
+import de.unkrig.commons.lang.security.SecureCharsets;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -70,17 +72,17 @@ class CustomAuthenticator extends Authenticator {
     public static final
     class CredentialsSpec implements Destroyable {
 
-        @Nullable private Regex             requestingHost;
-        @Nullable private Regex             requestingSite;
-        @Nullable private Regex             requestingPort;
-        @Nullable private Regex             requestingProtocol;
-        @Nullable private Regex             requestingPrompt;
-        @Nullable private Regex             requestingScheme;
-        @Nullable private Regex             requestingUrl;
-        @Nullable private Regex             requestorType;
-        @Nullable private String            userName;
-        @Nullable private DestroyableString password;
-        private boolean                     deny;
+        @Nullable private Regex  requestingHost;
+        @Nullable private Regex  requestingSite;
+        @Nullable private Regex  requestingPort;
+        @Nullable private Regex  requestingProtocol;
+        @Nullable private Regex  requestingPrompt;
+        @Nullable private Regex  requestingScheme;
+        @Nullable private Regex  requestingUrl;
+        @Nullable private Regex  requestorType;
+        @Nullable private String userName;
+        @Nullable private char[] password;
+        private boolean          deny;
 
         private boolean destroyed;
 
@@ -89,7 +91,7 @@ class CustomAuthenticator extends Authenticator {
 
         @Override public void
         destroy() {
-            if (this.password != null) this.password.destroy();
+            if (this.password != null) Arrays.fill(this.password, '\0');
             this.destroyed = true;
         }
 
@@ -161,7 +163,7 @@ class CustomAuthenticator extends Authenticator {
         }
         
         /**
-         * If set to {@code true}, then {@link #setUserName(String)} and {@link #setPassword(DestroyableString)} are
+         * If set to {@code true}, then {@link #setUserName(String)} and {@link #setPassword(char[])} are
          * ignored, and authentication is <em>denied</em> for this spec.
          */
         public void
@@ -172,16 +174,23 @@ class CustomAuthenticator extends Authenticator {
          * <em>not</em> configuring a password.
          */
         public void
-        setPassword(@Nullable DestroyableString password) {
+        setPassword(@Nullable char[] password) {
 
-            if (password != null && (password.length() == 0 || (password.length() == 1 && password.charAt(0) == '-'))) {
-                password.destroy();
-                password = null;
+            try {
+
+                if (
+                    password == null
+                    || password.length == 0
+                    || (password.length == 1 && password[0] == '-')
+                ) {
+                    if (this.password != null) Arrays.fill(this.password, '\0');
+                    this.password = null;
+                } else {
+                    this.password = Arrays.copyOf(password, password.length);
+                }
+            } finally {
+                if (password != null) Arrays.fill(password,  '\0');
             }
-
-            if (this.password != null) this.password.destroy();
-
-            this.password = password;
         }
 
         @Override public int
@@ -226,7 +235,24 @@ class CustomAuthenticator extends Authenticator {
     private final StoreMode             storeMode;
     private final List<CredentialsSpec> credentials = new ArrayList<CustomAuthenticator.CredentialsSpec>();
 
-    private final Map<Object, PasswordAuthentication> cache = new HashMap<Object, PasswordAuthentication>();
+    private MessageFormat dialogLabelMf = new MessageFormat((
+        ""
+        + "<html>"
+        +   "<table>"
+        +     "{1, choice,0#|1#'<tr><td>Host:    </td><td>'{2}'</td></tr>'}"
+        +     "{3, choice,0#|1#'<tr><td>Site:    </td><td>'{4}'</td></tr>'}"
+        +     "{5, choice,0#|1#'<tr><td>Port:    </td><td>'{6}'</td></tr>'}"
+        +     "{7, choice,0#|1#'<tr><td>Protocol:</td><td>'{8}'</td></tr>'}"
+        +     "{9, choice,0#|1#'<tr><td>Prompt:  </td><td>'{10}'</td></tr>'}"
+        +     "{11,choice,0#|1#'<tr><td>Scheme:  </td><td>'{12}'</td></tr>'}"
+        +     "{13,choice,0#|1#'<tr><td>URL:     </td><td>'{14}'</td></tr>'}"
+        +     "{15,choice,0#|1#'<tr><td>Type:    </td><td>'{16}'</td></tr>'}"
+        +   "</table>"
+        + "</html>"
+    ));
+
+    private final Map<String, String> userNameCache = Collections.synchronizedMap(new HashMap<String, String>());
+    private final Map<String, char[]> passwordCache = Collections.synchronizedMap(new HashMap<String, char[]>());
 
     /**
      * This one's initialized lazily by {@link #getPasswordStore()} to avoid unnecessary user interaction, like
@@ -255,6 +281,29 @@ class CustomAuthenticator extends Authenticator {
         this.storeMode = storeMode;
     }
 
+    /**
+     * The text of the label in the authentication dialog, in {@link MessageFormat} format.
+     * <p>
+     *   The following arguments are replaced within the message:
+     * </p>
+     * <dl>
+     *   <dt>{0}</dt>
+     *   <dd>
+     *     The "key" to the authentication, which is composed like this:<br />
+     *     <var>RequestorType</var>{@code /}<var>RequestingProtocol</var>{@code /}<var>RequestingHost</var>{@code
+     *     /}<var>RequestingPort</var>{@code /}<var>RequestingScheme</var>{@code /}</br>
+     *     Example value: {@code "PROXY/http/proxy.company.com/8080/Company internet proxy"}
+     *   </dd>
+     *   
+     *   <dt>{1}</dt>
+     *   <dd>
+     *     The prompt string given by the requestor, see {@link Authenticator#getRequestingPrompt()}.
+     *   </dd>
+     * </dl>
+     */
+    public void
+    setDialogLabel(String message) { this.dialogLabelMf = new MessageFormat(message); }
+    
     public void
     addCredentials(Collection<CustomAuthenticator.CredentialsSpec> credentials) {
 
@@ -289,12 +338,12 @@ class CustomAuthenticator extends Authenticator {
                 
                 userName = ce.userName;
                 if (userName != null) {
-                    CharSequence passwordCs = ce.password;
-                    if (passwordCs != null) {
+                    char[] password = ce.password;
+                    if (password != null) {
 
                         // The matching <credentials> subelement declares BOTH user name AND password;
                         // return that tuple without any user interaction.
-                        return new PasswordAuthentication(userName, CustomAuthenticator.toCharArray(passwordCs));
+                        return new PasswordAuthentication(userName, Arrays.copyOf(password,  password.length));
                     }
                 }
                 break;
@@ -317,7 +366,7 @@ class CustomAuthenticator extends Authenticator {
         );
 
         // Check the authentication cache.
-        DestroyableString password = null;
+        char[] password = null;
         switch (this.cacheMode) {
 
         case NONE:
@@ -325,20 +374,12 @@ class CustomAuthenticator extends Authenticator {
             break;
 
         case USER_NAMES:
-            synchronized (this.cache) {
-                PasswordAuthentication result = this.cache.get(key);
-                if (result != null) userName = result.getUserName();
-            }
+            userName = this.userNameCache.get(key);
             break;
 
         case USER_NAMES_AND_PASSWORDS:
-            synchronized (this.cache) {
-                PasswordAuthentication result = this.cache.get(key);
-                if (result != null) {
-                    userName = result.getUserName();
-                    password = new DestroyableString(result.getPassword());
-                }
-            }
+            userName = this.userNameCache.get(key);
+            password = this.passwordCache.get(key);
             break;
         }
 
@@ -369,13 +410,22 @@ class CustomAuthenticator extends Authenticator {
         if (userName != null) userNameField.setText(userName);
 
         JPasswordField passwordField = new JPasswordField();
-        if (password != null) passwordField.setText(new String(password.toCharArray()));
+        if (password != null) passwordField.setText(new String(password));
 
         CustomAuthenticator.focussify(userName != null && password == null ? passwordField : userNameField);
 
-        String message          = key;
-        String requestingPrompt = this.getRequestingPrompt();
-        if (requestingPrompt != null) message = requestingPrompt + ": " + message;
+        List<Object> args = new ArrayList<>();
+        args.add(key);                                                // {0}: key
+        CustomAuthenticator.add2(this.getRequestingHost(),     args); // {1}: is... {2} host
+        CustomAuthenticator.add2(this.getRequestingSite(),     args); // {3}: is... {4} site
+        CustomAuthenticator.add2(this.getRequestingPort(),     args); // {5}: is... {6} port
+        CustomAuthenticator.add2(this.getRequestingProtocol(), args); // {7}: is... {8} protocol
+        CustomAuthenticator.add2(this.getRequestingPrompt(),   args); // {9}: is... {10} prompt
+        CustomAuthenticator.add2(this.getRequestingScheme(),   args); // {11}: is... {12} scheme
+        CustomAuthenticator.add2(this.getRequestingURL(),      args); // {13}: is... {14} URL
+        CustomAuthenticator.add2(this.getRequestorType(),      args); // {15}: is... {16} type
+        
+        String message = this.dialogLabelMf.format(args.toArray());
 
         String title = (
             this.getRequestingProtocol().toUpperCase()
@@ -401,15 +451,10 @@ class CustomAuthenticator extends Authenticator {
 
         userName = userNameField.getText();
 
-        if (password != null) password.destroy();
-        password = new DestroyableString(passwordField.getPassword());
+        if (password != null) Arrays.fill(password, '\0');
+        password = passwordField.getPassword();
 
-        PasswordAuthentication result;
-        {
-            char[] passwordCa = password.toCharArray();
-            result = new PasswordAuthentication(userName, passwordCa);
-            Arrays.fill(passwordCa, '\0');
-        }
+        // Both "userName" and "password" are non-null at this point.
 
         switch (this.cacheMode) {
 
@@ -418,15 +463,13 @@ class CustomAuthenticator extends Authenticator {
             break;
 
         case USER_NAMES:
-            synchronized (this.cache) {
-                this.cache.put(key, new PasswordAuthentication(userName, null));
-            }
+            this.userNameCache.put(key, userName);
             break;
 
         case USER_NAMES_AND_PASSWORDS:
-            synchronized (this.cache) {
-                this.cache.put(key, result);
-            }
+            this.userNameCache.put(key, userName);
+            char[] prev = this.passwordCache.put(key, Arrays.copyOf(password, password.length));
+            if (prev != null) Arrays.fill(prev,  '\0');
             break;
         }
 
@@ -443,16 +486,31 @@ class CustomAuthenticator extends Authenticator {
                 break;
 
             case USER_NAMES_AND_PASSWORDS:
-                this.getPasswordStore().put(key, userName, password);
+                this.getPasswordStore().put(key, userName, Arrays.copyOf(password, password.length));
                 break;
             }
         } catch (IOException ioe) {
             throw ExceptionUtil.wrap("Saving password store", ioe, IllegalStateException.class);
         }
 
-        password.destroy();
-
+        PasswordAuthentication result = new PasswordAuthentication(userName, password);
+        Arrays.fill(password, '\0');
         return result;
+    }
+
+    private static void
+    add2(@Nullable Object arg, List<Object> args) {
+        
+        if (arg != null) {
+            String s = arg.toString().trim();
+            if (!s.isEmpty()) {
+                args.add(1);
+                args.add(s);
+                return;
+            }
+        }
+        args.add(0);
+        args.add("");
     }
 
     private PasswordAuthenticationStore
