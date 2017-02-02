@@ -42,7 +42,6 @@ import de.unkrig.antology.task.CustomAuthenticator.CacheMode;
 import de.unkrig.antology.task.CustomAuthenticator.CredentialsSpec;
 import de.unkrig.antology.task.CustomAuthenticator.StoreMode;
 import de.unkrig.antology.util.Regex;
-import de.unkrig.commons.lang.security.SecureCharsets;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -73,7 +72,8 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *   <li>
  *     Otherwise the user is prompted with a {@link JOptionPane} dialog for a user name and a password. (Iff the
  *     matching {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement configured a {@link
- *     CredentialsSpec#setUserName(String)}, then that user name is pre-filled in.)
+ *     CredentialsSpec#setUserName(String)}, then that user name is pre-filled in.)<br />
+ *     <img width="372" height="342" src="doc-files/setAuthenticator_httpAuthentication.png" />
  *   </li>
  *   <li>
  *     After the user has filled in the missing data, the user name and password are returned.
@@ -93,9 +93,13 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *   passwords in the authentication store, even if he steals the key store file.
  * </p>
  * <p>
- *   When the secret key is created, the user is prompted to choose the master password. When a different JVM instance
- *   requires the secret key, it prompts the user to enter the master password.
+ *   When the secret key is created, the user is prompted to choose the master password:
  * </p>
+ * <img width="451" height="178" src="doc-files/setAuthenticator_createAuthenticationStore.png" />
+ * <p>
+ *   When a different JVM instance requires the secret key, it prompts the user to enter the master password:
+ * </p>
+ * <img width="481" height="191" src="doc-files/setAuthenticator_useAuthenticationStore.png" />
  *
  * @see Authenticator#setDefault(Authenticator)
  * @see #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)
