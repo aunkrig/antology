@@ -132,6 +132,13 @@ import org.apache.tools.ant.util.VectorSet;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
+ * This task is a copy of <a href="https://ant.apache.org/manual/Tasks/ftp.html">the standard <code>&lt;ftp></code>
+ * task</a> of APACHE ANT, extended with the capability to use FTP proxies, and makes use of Java's {@link
+ * Authenticator} for authentication.
+ * <p>
+ *   Everything else is as with the original task, including the documentation that follows.
+ * </p>
+ * <hr /> 
  * Basic FTP client. Performs the following actions:
  * <ul>
  *   <li> <strong>send</strong> - send files to a remote server. This is the
