@@ -56,7 +56,6 @@ import de.unkrig.commons.lang.ObjectUtil;
 import de.unkrig.commons.lang.crypto.PasswordAuthenticationStore;
 import de.unkrig.commons.lang.crypto.PasswordAuthenticationStores;
 import de.unkrig.commons.lang.crypto.SecretKeys;
-import de.unkrig.commons.lang.security.SecureCharsets;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -594,15 +593,6 @@ class CustomAuthenticator extends Authenticator {
             @Override public void ancestorRemoved(@Nullable AncestorEvent event) {}
             @Override public void ancestorMoved(@Nullable AncestorEvent event)   {}
         });
-    }
-
-    private static char[]
-    toCharArray(CharSequence cs) {
-        int l = cs.length();
-
-        char[] result = new char[l];
-        for (int i = 0; i < l; i++) result[i] = cs.charAt(i);
-        return result;
     }
 
     private static boolean

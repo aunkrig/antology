@@ -28,7 +28,6 @@ package de.unkrig.antology.task;
 
 import java.net.Authenticator;
 import java.net.URLConnection;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
