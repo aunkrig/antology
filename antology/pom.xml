@@ -132,22 +132,6 @@
            <autoReleaseAfterClose>false</autoReleaseAfterClose>
         </configuration>
       </plugin>
-<!--
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>1.5</version>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
--->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -226,6 +210,30 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+
+    <!-- Signs all artifacts with GPG (oss.sonatype.org requires that). -->
+    <profile>
+      <id>have_gpg</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals><goal>sign</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <name>antology</name>
   <description>
