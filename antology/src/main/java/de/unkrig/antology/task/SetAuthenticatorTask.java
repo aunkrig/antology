@@ -163,17 +163,27 @@ class SetAuthenticatorTask extends Task implements Destroyable {
      *   <dt>{15}, {16}</dt>
      *   <dd>The requestor type</dd>
      * </dl>
+     * <p>
+     *   The default value is
+     * </p>
+     * <blockquote><pre>{@value CustomAuthenticator#DEFAULT_DIALOG_LABEL}</pre></blockquote>
      */
     public void
     setDialogLabel(String value) { this.dialogLabel = value; }
 
     /**
+     * Whether user names, user names and passwords, or none of both are remembered while the JVM is running.
+     * This attribute takes effect only on the <em>first</em> execution of this task.
+     * 
      * @ant.defaultValue {@value #DEFAULT_CACHE_MODE}
      */
     public void
     setCache(CacheMode value) { this.cacheMode = value; }
 
     /**
+     * Whether user names, user names and passwords, or none of both are persistently stored.
+     * This attribute takes effect only on the <em>first</em> execution of this task.
+     * 
      * @ant.defaultValue {@value #DEFAULT_STORE_MODE}
      */
     public void
@@ -185,12 +195,17 @@ class SetAuthenticatorTask extends Task implements Destroyable {
      * that matches the request determines the user name and password.
      * <p>
      *   A {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement matches iff the requesting
-     *   host, site, port, protocol, url, scheme and/or requestor type match the respective attributes.
+     *   host, site, port, protocol, url, scheme and requestor type all match the respective attributes.
      * </p>
      * <p>
-     *   If no {@link CredentialsSpec#setUserName(String) user name} and/or no {@link
-     *   CustomAuthenticator.CredentialsSpec#setPassword(char[]) password} are configured, then the user is prompted
-     *   for the missing user name and/or password.
+     *   If no {@link CredentialsSpec#setUserName(String)} and/or no {@link
+     *   CredentialsSpec#setPassword(char[])} are configured, then the user is prompted for the missing user name
+     *   and/or password.
+     * </p>
+     * <p>
+     *   When this task is executed multiply, then the configured {@link
+     *   #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} <em>add up</em>, i.e. previously configured
+     *   credentials are never erased and always take precedence over newly configured ones.
      * </p>
      */
     public void

@@ -64,8 +64,14 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class CustomAuthenticator extends Authenticator {
 
+    /**
+     * Whether user names, user names and passwords, or none of both are remembered while the JVM is running.
+     */
     public enum CacheMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
 
+    /**
+     * Whether user names, user names and passwords, or none of both are persistently stored.
+     */
     public enum StoreMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
 
     public static final
@@ -234,21 +240,7 @@ class CustomAuthenticator extends Authenticator {
     private final StoreMode             storeMode;
     private final List<CredentialsSpec> credentials = new ArrayList<CustomAuthenticator.CredentialsSpec>();
 
-    private MessageFormat dialogLabelMf = new MessageFormat((
-        ""
-        + "<html>"
-        +   "<table>"
-        +     "{1, choice,0#|1#'<tr><td>Host:    </td><td>'{2}'</td></tr>'}"
-        +     "{3, choice,0#|1#'<tr><td>Site:    </td><td>'{4}'</td></tr>'}"
-        +     "{5, choice,0#|1#'<tr><td>Port:    </td><td>'{6}'</td></tr>'}"
-        +     "{7, choice,0#|1#'<tr><td>Protocol:</td><td>'{8}'</td></tr>'}"
-        +     "{9, choice,0#|1#'<tr><td>Prompt:  </td><td>'{10}'</td></tr>'}"
-        +     "{11,choice,0#|1#'<tr><td>Scheme:  </td><td>'{12}'</td></tr>'}"
-        +     "{13,choice,0#|1#'<tr><td>URL:     </td><td>'{14}'</td></tr>'}"
-        +     "{15,choice,0#|1#'<tr><td>Type:    </td><td>'{16}'</td></tr>'}"
-        +   "</table>"
-        + "</html>"
-    ));
+    private MessageFormat dialogLabelMf = new MessageFormat(DEFAULT_DIALOG_LABEL);
 
     private final Map<String, String> userNameCache = Collections.synchronizedMap(new HashMap<String, String>());
     private final Map<String, char[]> passwordCache = Collections.synchronizedMap(new HashMap<String, char[]>());
@@ -258,6 +250,26 @@ class CustomAuthenticator extends Authenticator {
      * asking for the "master password".
      */
     @Nullable private PasswordAuthenticationStore passwordStore;
+
+    /**
+     * The dialog label to take effect iff <em>no</em> custom label is configured through {@link
+     * #setDialogLabel(String)}.
+     */
+    public static final String DEFAULT_DIALOG_LABEL = (
+        ""
+        + "<html>\n"
+        + "  <table>\n"
+        + "    {1,  choice, 0#|1#'<tr><td>Host:    </td><td>'{2}'</td></tr>'}\n"
+        + "    {3,  choice, 0#|1#'<tr><td>Site:    </td><td>'{4}'</td></tr>'}\n"
+        + "    {5,  choice, 0#|1#'<tr><td>Port:    </td><td>'{6}'</td></tr>'}\n"
+        + "    {7,  choice, 0#|1#'<tr><td>Protocol:</td><td>'{8}'</td></tr>'}\n"
+        + "    {9,  choice, 0#|1#'<tr><td>Prompt:  </td><td>'{10}'</td></tr>'}\n"
+        + "    {11, choice, 0#|1#'<tr><td>Scheme:  </td><td>'{12}'</td></tr>'}\n"
+        + "    {13, choice, 0#|1#'<tr><td>URL:     </td><td>'{14}'</td></tr>'}\n"
+        + "    {15, choice, 0#|1#'<tr><td>Type:    </td><td>'{16}'</td></tr>'}\n"
+        + "  </table>\n"
+        + "</html>"
+    );
 
     private static final File
     KEY_STORE_FILE = new File(System.getProperty("user.home"), ".customAuthenticator_keystore");
@@ -274,6 +286,11 @@ class CustomAuthenticator extends Authenticator {
     private static final String
     CREDENTIALS_STORE_COMMENTS = " The credentials store of the CustomAuthenticator of http://antology.unkrig.de.";
 
+    /**
+     * @param cacheMode Whether user names, user names and passwords, or none of both are remembered while the JVM
+     *                  is running
+     * @param storeMode Whether user names, user names and passwords, or none of both are persistently stored
+     */
     public
     CustomAuthenticator(CacheMode cacheMode, StoreMode storeMode) {
         this.cacheMode = cacheMode;
