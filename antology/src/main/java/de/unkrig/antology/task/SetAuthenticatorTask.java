@@ -106,6 +106,7 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
 
+    // Must be PUBLIC so they are JAVADOC-referencable through "@value". SUPPRESS CHECKSTYLE Javadoc:2
     public static final String DEFAULT_STORE_MODE = "NONE";
     public static final String DEFAULT_CACHE_MODE = "USER_NAMES_AND_PASSWORDS";
     
@@ -126,7 +127,8 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     isDestroyed() { return this.destroyed; }
 
     /**
-     * The text of the label in the authentication dialog.
+     * The text of the label in the authentication dialog. If the text starts with "{@code <html>}", then it may
+     * contain {@linkplain SwingDialogTask HTML markup}.
      * <p>
      *   The following arguments are replaced within the message:
      * </p>
