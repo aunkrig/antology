@@ -533,10 +533,18 @@ class CustomAuthenticator extends Authenticator {
         return result;
     }
 
+    /**
+     * Adds two elements to the <var>args</var>; either <code>{ 1, arg.toString().trim() }</code> iff <var>arg</var> is
+     * neither {@code null}, nor {@code arg.toString().trim().isEmpty()}, nor <var>arg</var> equals -1; otherwise
+     * <code>{ 0, "" }</code>.
+     */
     private static void
     add2(@Nullable Object arg, List<Object> args) {
         
-        if (arg != null) {
+        if (
+            arg != null
+            && !Integer.valueOf(-1).equals(arg)
+        ) {
             String s = arg.toString().trim();
             if (!s.isEmpty()) {
                 args.add(1);
