@@ -308,7 +308,7 @@ class CustomAuthenticator extends Authenticator {
      *     The "key" to the authentication, which is composed like this:<br />
      *     <var>requestor-type</var>{@code /}<var>requesting-protocol</var>{@code /}<var>requesting-host</var>{@code
      *     /}<var>requesting-port</var>{@code /}<var>requesting-scheme</var>{@code /}</br>
-     *     Example value: {@code "PROXY/http/proxy.company.com/8080/Company internet proxy"}
+     *     Example value: {@code "PROXY/http/proxy.company.com/8080/Negotiate"}
      *   </dd>
      *   
      *   <dt>{1}, {2}</dt>
