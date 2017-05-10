@@ -50,6 +50,7 @@ import javax.swing.JTextField;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
+import de.unkrig.antology.util.JPasswordFields;
 import de.unkrig.antology.util.Regex;
 import de.unkrig.commons.lang.ExceptionUtil;
 import de.unkrig.commons.lang.ObjectUtil;
@@ -74,6 +75,9 @@ class CustomAuthenticator extends Authenticator {
      */
     public enum StoreMode { NONE, USER_NAMES, USER_NAMES_AND_PASSWORDS }
 
+    /**
+     * A pattern that is intended to be matched against the properties of an {@link Authenticator}.
+     */
     public static final
     class CredentialsSpec implements Destroyable {
 
@@ -104,47 +108,48 @@ class CustomAuthenticator extends Authenticator {
         isDestroyed() { return this.destroyed; }
 
         /**
-         * Hostname of the site or proxy.
+         * Hostname of the site or proxy. {@code null} (the default) means "any host".
          */
         public void
-        setRequestingHost(Regex regex) { this.requestingHost = regex; }
+        setRequestingHost(@Nullable Regex regex) { this.requestingHost = regex; }
 
         /**
-         * {@link InetAddress} of the site.
+         * {@link InetAddress} of the site. {@code null} (the default) means "any site".
          */
         public void
-        setRequestingSite(Regex regex) { this.requestingSite = regex; }
+        setRequestingSite(@Nullable Regex regex) { this.requestingSite = regex; }
 
         /**
-         * Port number for the requested connection.
+         * The pattern to match against the "port number for the requested connection". {@code null} (the default)
+         * means "any port".
          */
         public void
-        setRequestingPort(Regex regex) { this.requestingPort = regex; }
+        setRequestingPort(@Nullable Regex regex) { this.requestingPort = regex; }
 
         /**
-         * The protocol that's requesting the connection.
+         * The protocol that's requesting the connection. {@code null} (the default) means "any protocol".
          */
         public void
-        setRequestingProtocol(Regex regex) { this.requestingProtocol = regex; }
+        setRequestingProtocol(@Nullable Regex regex) { this.requestingProtocol = regex; }
 
         /**
          * The prompt string given by the requestor (the "realm" for <a href="http://www.ietf.org/rfc/rfc2617.txt">HTTP
-         * authentication</a>).
+         * authentication</a>). {@code null} (the default) means "any prompt string".
          */
         public void
-        setRequestingPrompt(Regex regex) { this.requestingPrompt = regex; }
+        setRequestingPrompt(@Nullable Regex regex) { this.requestingPrompt = regex; }
 
         /**
-         * The scheme of the requestor.
+         * The scheme of the requestor. {@code null} (the default) means "any scheme".
          */
         public void
-        setRequestingScheme(Regex regex) { this.requestingScheme = regex; }
+        setRequestingScheme(@Nullable Regex regex) { this.requestingScheme = regex; }
 
         /**
-         * The URL that resulted in this request for authentication.
+         * The URL that resulted in this request for authentication. {@code null} (the default) means "any URL".
          */
         public void
-        setRequestingURL(Regex regex) { this.requestingUrl = regex; }
+        setRequestingURL(@Nullable Regex regex) { this.requestingUrl = regex; }
 
         /**
          * Whether the requestor is a Proxy or a Server.
@@ -154,9 +159,12 @@ class CustomAuthenticator extends Authenticator {
          *   <dt>{@code SERVER}</dt>
          *   <dd>Entity requesting authentication is a HTTP origin server.</dd>
          * </dl>
+         * <p>
+         *   {@code null} (the default) means "any requestor type".
+         * </p>
          */
         public void
-        setRequestorType(Regex regex) { this.requestorType = regex; }
+        setRequestorType(@Nullable Regex regex) { this.requestorType = regex; }
 
         /**
          * The user name to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
@@ -219,7 +227,7 @@ class CustomAuthenticator extends Authenticator {
         equals(@Nullable Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
-            CustomAuthenticator.CredentialsSpec that = (CustomAuthenticator.CredentialsSpec) obj;
+            CredentialsSpec that = (CredentialsSpec) obj;
             return (
                 ObjectUtil.equals(this.requestingHost,        that.requestingHost)
                 && ObjectUtil.equals(this.requestingSite,     that.requestingSite)
@@ -238,7 +246,7 @@ class CustomAuthenticator extends Authenticator {
 
     private final CacheMode             cacheMode;
     private final StoreMode             storeMode;
-    private final List<CredentialsSpec> credentials = new ArrayList<CustomAuthenticator.CredentialsSpec>();
+    private final List<CredentialsSpec> credentials = new ArrayList<CredentialsSpec>();
 
     private MessageFormat dialogLabelMf = new MessageFormat(DEFAULT_DIALOG_LABEL);
 
@@ -311,41 +319,73 @@ class CustomAuthenticator extends Authenticator {
      *     Example value: {@code "PROXY/http/proxy.company.com/8080/Negotiate"}
      *   </dd>
      *   
-     *   <dt>{1}, {2}</dt>
+     *   <dt>{1}, {2}<sup>*</sup></dt>
      *   <dd>The requesting host; see {@link #getRequestingHost()}</dd>
      *   
-     *   <dt>{3}, {4}</dt>
+     *   <dt>{3}, {4}<sup>*</sup></dt>
      *   <dd>The requesting site; see {@link #getRequestingSite()}</dd>
      *   
-     *   <dt>{5}, {6}</dt>
+     *   <dt>{5}, {6}<sup>*</sup></dt>
      *   <dd>The requesting port; see {@link #getRequestingPort()}</dd>
      *   
-     *   <dt>{7}, {8}</dt>
+     *   <dt>{7}, {8}<sup>*</sup></dt>
      *   <dd>The requesting protocol; see {@link #getRequestingProtocol()}</dd>
      *   
-     *   <dt>{9}, {10}</dt>
+     *   <dt>{9}, {10}<sup>*</sup></dt>
      *   <dd>The requesting prompt; see {@link #getRequestingPrompt()}</dd>
      *   
-     *   <dt>{11}, {12}</dt>
+     *   <dt>{11}, {12}<sup>*</sup></dt>
      *   <dd>The requesting scheme; see {@link #getRequestingScheme()}</dd>
      *   
-     *   <dt>{13}, {14}</dt>
+     *   <dt>{13}, {14}<sup>*</sup></dt>
      *   <dd>The requesting URL; see {@link #getRequestingURL()}</dd>
      *   
-     *   <dt>{15}, {16}</dt>
+     *   <dt>{15}, {16}<sup>*</sup></dt>
      *   <dd>The requestor type; see {@link #getRequestorType()}</dd>
      * </dl>
+     * <p>
+     *   <sup>*</sup> Where the above list presents <em>two</em> placeholders, they expand as follows:
+     * </p>
+     * <ul>
+     *   <li>
+     *     If the value is either {@code null} or {@code ""} or {@code -1}, the two placeholders expand to {@code "0"}
+     *     and {@code ""}.
+     *   </li>
+     *   <li>
+     *     Otherwise, the two placeholders expand to {@code "1"} and the value.
+     *   </li>
+     * </ul>
+     * <p>
+     *   The default value is
+     * </p>
+     * <pre>
+     * {@value #DEFAULT_DIALOG_LABEL}
+     * </pre>
      */
     public void
     setDialogLabel(String message) { this.dialogLabelMf = new MessageFormat(message); }
     
+    /**
+     * Adds a set of {@link CredentialsSpec}s to this {@link CustomAuthenticator}. Earlier specs take precedence over
+     * later specs.
+     * <p>
+     *   Specs that equal any previously added spec are ignored, because they are irrelevant.
+     * </p>
+     * <p>
+     *   If no specs are added, then the {@link CustomAuthenticator} will prompt the user for user name and/or
+     *   password, and optionally cache the entered data (transiently and/or persistently, depending on the
+     *   configured cache mode and store mode).
+     * </p>
+     * 
+     * @see #CustomAuthenticator(CacheMode, StoreMode)
+     */
     public void
-    addCredentials(Collection<CustomAuthenticator.CredentialsSpec> credentials) {
+    addCredentials(Collection<CredentialsSpec> credentials) {
 
-        for (CustomAuthenticator.CredentialsSpec newCe : credentials) {
+        for (CredentialsSpec newCs : credentials) {
 
             // Avoid adding duplicate credentials specs.
-            if (!this.credentials.contains(newCe)) this.credentials.add(newCe);
+            if (!this.credentials.contains(newCs)) this.credentials.add(newCs);
         }
     }
 
@@ -356,24 +396,15 @@ class CustomAuthenticator extends Authenticator {
 
         String userName = null;
 
-        for (CustomAuthenticator.CredentialsSpec ce : this.credentials) {
+        for (CredentialsSpec cs : this.credentials) {
 
-            if (
-                CustomAuthenticator.matches(ce.requestingHost,        this.getRequestingHost())
-                && CustomAuthenticator.matches(ce.requestingSite,     this.getRequestingSite())
-                && CustomAuthenticator.matches(ce.requestingPort,     this.getRequestingPort())
-                && CustomAuthenticator.matches(ce.requestingProtocol, this.getRequestingProtocol())
-                && CustomAuthenticator.matches(ce.requestingPrompt,   this.getRequestingPrompt())
-                && CustomAuthenticator.matches(ce.requestingScheme,   this.getRequestingScheme())
-                && CustomAuthenticator.matches(ce.requestingUrl,      this.getRequestingURL())
-                && CustomAuthenticator.matches(ce.requestorType,      this.getRequestorType())
-            ) {
+            if (this.matches(cs)) {
                 
-                if (ce.deny) return null;
+                if (cs.deny) return null;
                 
-                userName = ce.userName;
+                userName = cs.userName;
                 if (userName != null) {
-                    char[] password = ce.password;
+                    char[] password = cs.password;
                     if (password != null) {
 
                         // The matching <credentials> subelement declares BOTH user name AND password;
@@ -400,72 +431,98 @@ class CustomAuthenticator extends Authenticator {
             + ObjectUtil.or(this.getRequestingScheme(), "-")
         );
 
-        // Check the authentication cache.
-        char[] password = null;
-        switch (this.cacheMode) {
-
-        case NONE:
-            ;
-            break;
-
-        case USER_NAMES:
-            userName = this.userNameCache.get(key);
-            break;
-
-        case USER_NAMES_AND_PASSWORDS:
-            userName = this.userNameCache.get(key);
-            password = this.passwordCache.get(key);
-            break;
+        // Compose the dialog message.
+        String message;
+        {
+            List<Object> args = new ArrayList<>();
+            args.add(key);                                                // {0}: key
+            CustomAuthenticator.add2(this.getRequestingHost(),     args); // {1}: is... {2} host
+            CustomAuthenticator.add2(this.getRequestingSite(),     args); // {3}: is... {4} site
+            CustomAuthenticator.add2(this.getRequestingPort(),     args); // {5}: is... {6} port
+            CustomAuthenticator.add2(this.getRequestingProtocol(), args); // {7}: is... {8} protocol
+            CustomAuthenticator.add2(this.getRequestingPrompt(),   args); // {9}: is... {10} prompt
+            CustomAuthenticator.add2(this.getRequestingScheme(),   args); // {11}: is... {12} scheme
+            CustomAuthenticator.add2(this.getRequestingURL(),      args); // {13}: is... {14} URL
+            CustomAuthenticator.add2(this.getRequestorType(),      args); // {15}: is... {16} type
+            
+            message = this.dialogLabelMf.format(args.toArray());
         }
 
-        // Check the authentication store.
-        switch (this.storeMode) {
-
-        case NONE:
-            ;
-            break;
-
-        case USER_NAMES:
-            if (userName == null) userName = this.getPasswordStore().getUserName(key);
-            break;
-
-        case USER_NAMES_AND_PASSWORDS:
-            if (userName == null) {
-                userName = this.getPasswordStore().getUserName(key);
-                if (userName != null) password = this.getPasswordStore().getPassword(key, userName);
-            } else
-            if (password == null && userName.equals(this.getPasswordStore().getUserName(key))) {
-                password = this.getPasswordStore().getPassword(key, userName);
-            }
-            break;
-        }
-
-        // Now prompt the user for user name and passwords, and present the values found so far as proposals.
-        JTextField userNameField = new JTextField();
-        if (userName != null) userNameField.setText(userName);
-
-        JPasswordField passwordField = new JPasswordField();
-        if (password != null) passwordField.setText(new String(password));
-
-        CustomAuthenticator.focussify(userName != null && password == null ? passwordField : userNameField);
-
-        List<Object> args = new ArrayList<>();
-        args.add(key);                                                // {0}: key
-        CustomAuthenticator.add2(this.getRequestingHost(),     args); // {1}: is... {2} host
-        CustomAuthenticator.add2(this.getRequestingSite(),     args); // {3}: is... {4} site
-        CustomAuthenticator.add2(this.getRequestingPort(),     args); // {5}: is... {6} port
-        CustomAuthenticator.add2(this.getRequestingProtocol(), args); // {7}: is... {8} protocol
-        CustomAuthenticator.add2(this.getRequestingPrompt(),   args); // {9}: is... {10} prompt
-        CustomAuthenticator.add2(this.getRequestingScheme(),   args); // {11}: is... {12} scheme
-        CustomAuthenticator.add2(this.getRequestingURL(),      args); // {13}: is... {14} URL
-        CustomAuthenticator.add2(this.getRequestorType(),      args); // {15}: is... {16} type
-        
-        String message = this.dialogLabelMf.format(args.toArray());
-
+        // Compose the dialog title.
         String title = (
             this.getRequestingProtocol().toUpperCase()
             + (this.getRequestorType() == RequestorType.PROXY ? " Proxy Authentication" : " Authentication")
         );
+
+        // Now create the user name and password fields, and initialize them with cached values (if any).
+        JTextField     userNameField;
+        JPasswordField passwordField;
+
+        // Check the authentication cache.
+        boolean hasPassword;
+        {
+            char[] password = null;
+            try {
+                
+                switch (this.cacheMode) {
+        
+                case NONE:
+                    ;
+                    break;
+        
+                case USER_NAMES:
+                    // Prefer the CACHED user name over the CONFIGURED user name.
+                    userName = this.userNameCache.get(key);
+                    break;
+        
+                case USER_NAMES_AND_PASSWORDS:
+                    // Prefer the CACHED user name and password over the CONFIGURED user name and password.
+                    userName = this.userNameCache.get(key);
+                    char[] tmp = this.passwordCache.get(key);
+                    if (tmp != null) password = tmp.clone();
+                    break;
+                }
+        
+                // Check the authentication store.
+                switch (this.storeMode) {
+        
+                case NONE:
+                    ;
+                    break;
+        
+                case USER_NAMES:
+                    if (userName == null) userName = this.getPasswordStore().getUserName(key);
+                    break;
+        
+                case USER_NAMES_AND_PASSWORDS:
+                    if (userName == null) {
+                        userName = this.getPasswordStore().getUserName(key);
+                        if (userName != null) {
+                            if (password != null) Arrays.fill(password, '\0');
+                            password = this.getPasswordStore().getPassword(key, userName);
+                        }
+                    } else
+                    if (password == null && userName.equals(this.getPasswordStore().getUserName(key))) {
+                        password = this.getPasswordStore().getPassword(key, userName);
+                    }
+                    break;
+                }
+    
+                // Now prompt the user for user name and passwords, and present the values found so far as proposals.
+                userNameField = new JTextField();
+                if (userName != null) userNameField.setText(userName);
+    
+                passwordField = new JPasswordField();
+                if (password != null) JPasswordFields.setPassword(passwordField, password);
+                
+                hasPassword = password != null;
+            } finally {
+                if (password != null) Arrays.fill(password, '\0');
+            }
+        }
+
+        // Set the initial focuse to either the user name or the password field.
+        CustomAuthenticator.focussify(userName != null && !hasPassword ? passwordField : userNameField);
 
         if (JOptionPane.showOptionDialog(
             null,                         // parentComponent
@@ -486,51 +543,72 @@ class CustomAuthenticator extends Authenticator {
 
         userName = userNameField.getText();
 
-        if (password != null) Arrays.fill(password, '\0');
-        password = passwordField.getPassword();
-
-        // Both "userName" and "password" are non-null at this point.
-
-        switch (this.cacheMode) {
-
-        case NONE:
-            ;
-            break;
-
-        case USER_NAMES:
-            this.userNameCache.put(key, userName);
-            break;
-
-        case USER_NAMES_AND_PASSWORDS:
-            this.userNameCache.put(key, userName);
-            char[] prev = this.passwordCache.put(key, Arrays.copyOf(password, password.length));
-            if (prev != null) Arrays.fill(prev,  '\0');
-            break;
-        }
-
+        char[] password = passwordField.getPassword();
         try {
-
-            switch (this.storeMode) {
-
+    
+            // Both "userName" and "password" are non-null at this point.
+    
+            switch (this.cacheMode) {
+    
             case NONE:
-                this.getPasswordStore().remove(key);
+                ;
                 break;
-
+    
             case USER_NAMES:
-                this.getPasswordStore().put(key, userName);
+                this.userNameCache.put(key, userName);
                 break;
-
+    
             case USER_NAMES_AND_PASSWORDS:
-                this.getPasswordStore().put(key, userName, Arrays.copyOf(password, password.length));
+                this.userNameCache.put(key, userName);
+                char[] prev = this.passwordCache.put(key, password.clone());
+                if (prev != null) Arrays.fill(prev, '\0');
                 break;
             }
-        } catch (IOException ioe) {
-            throw ExceptionUtil.wrap("Saving password store", ioe, IllegalStateException.class);
+    
+            try {
+    
+                switch (this.storeMode) {
+    
+                case NONE:
+                    this.getPasswordStore().remove(key);
+                    break;
+    
+                case USER_NAMES:
+                    this.getPasswordStore().put(key, userName);
+                    break;
+    
+                case USER_NAMES_AND_PASSWORDS:
+                    this.getPasswordStore().put(key, userName, password.clone()); // <= "put()" clears the char[]
+                    break;
+                }
+            } catch (IOException ioe) {
+                throw ExceptionUtil.wrap("Saving password store", ioe, IllegalStateException.class);
+            }
+    
+            return new PasswordAuthentication(userName, password); // <= Constructor clones the password char[]
+        } finally {
+            Arrays.fill(password, '\0');
         }
+    }
 
-        PasswordAuthentication result = new PasswordAuthentication(userName, password);
-        Arrays.fill(password, '\0');
-        return result;
+    /**
+     * @return Whether this {@link Authenticator} matches the <var>credentialsSpec</var>
+     * @see    #matches(Regex, Object)
+     */
+    private boolean
+    matches(CredentialsSpec credentialsSpec) {
+        
+        return (
+            true // SUPPRESS CHECKSTYLE SimplifyBooleanExpression
+            && CustomAuthenticator.matches(credentialsSpec.requestingHost,     this.getRequestingHost())
+            && CustomAuthenticator.matches(credentialsSpec.requestingSite,     this.getRequestingSite())
+            && CustomAuthenticator.matches(credentialsSpec.requestingPort,     this.getRequestingPort())
+            && CustomAuthenticator.matches(credentialsSpec.requestingProtocol, this.getRequestingProtocol())
+            && CustomAuthenticator.matches(credentialsSpec.requestingPrompt,   this.getRequestingPrompt())
+            && CustomAuthenticator.matches(credentialsSpec.requestingScheme,   this.getRequestingScheme())
+            && CustomAuthenticator.matches(credentialsSpec.requestingUrl,      this.getRequestingURL())
+            && CustomAuthenticator.matches(credentialsSpec.requestorType,      this.getRequestorType())
+        );
     }
 
     /**
