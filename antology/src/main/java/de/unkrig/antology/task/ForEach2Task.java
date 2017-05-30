@@ -133,7 +133,7 @@ import de.unkrig.commons.util.time.PointOfTime;
 public
 class ForEach2Task extends Task {
 
-    private static final Iterable<?> DEFAULT_ITERABLE = IterableUtil.foR(1, Integer.MAX_VALUE);
+    private static final Iterable<?> DEFAULT_ITERABLE = IterableUtil.NATURALS;
 
     private
     interface PrePost {
