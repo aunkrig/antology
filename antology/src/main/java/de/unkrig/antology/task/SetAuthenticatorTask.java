@@ -29,7 +29,9 @@ package de.unkrig.antology.task;
 import java.net.Authenticator;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Destroyable;
 import javax.swing.JOptionPane;
@@ -37,10 +39,10 @@ import javax.swing.JOptionPane;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.taskdefs.optional.net2.FTP2;
 
-import de.unkrig.antology.task.CustomAuthenticator.CacheMode;
-import de.unkrig.antology.task.CustomAuthenticator.CredentialsSpec;
-import de.unkrig.antology.task.CustomAuthenticator.StoreMode;
-import de.unkrig.antology.util.Regex;
+import de.unkrig.commons.net.authenticator.CustomAuthenticator;
+import de.unkrig.commons.net.authenticator.CustomAuthenticator.CacheMode;
+import de.unkrig.commons.net.authenticator.CustomAuthenticator.CredentialsSpec;
+import de.unkrig.commons.net.authenticator.CustomAuthenticator.StoreMode;
 import de.unkrig.commons.nullanalysis.Nullable;
 
 /**
@@ -106,20 +108,83 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
 
+    // We have to wrap the CredentialsSpec object for ANT, because java.util.Pattern has no single-string constructor.
+    
+    /**
+     * @see CredentialsSpec
+     */
+    public static final
+    class CredentialsSpec2 implements Destroyable {
+
+        private final CredentialsSpec delegate = new CredentialsSpec();
+
+        @Override protected void finalize()    { this.destroy();                     }
+        @Override public void    destroy()     { this.delegate.destroy();            }
+        @Override public boolean isDestroyed() { return this.delegate.isDestroyed(); }
+
+        /** @see CredentialsSpec#setRequestingHost(Pattern) */
+        public void setRequestingHost(@Nullable String regex)     { this.delegate.setRequestingHost(regex(regex)); }
+        /** @see CredentialsSpec#setRequestingSite(Pattern) */
+        public void setRequestingSite(@Nullable String regex)     { this.delegate.setRequestingSite(regex(regex)); }
+        /** @see CredentialsSpec#setRequestingPort(Pattern) */
+        public void setRequestingPort(@Nullable String regex)     { this.delegate.setRequestingPort(regex(regex)); }
+        /** @see CredentialsSpec#setRequestingProtocol(Pattern) */
+        public void setRequestingProtocol(@Nullable String regex) { this.delegate.setRequestingProtocol(regex(regex)); }
+        /** @see CredentialsSpec#setRequestingPrompt(Pattern) */
+        public void setRequestingPrompt(@Nullable String regex)   { this.delegate.setRequestingPrompt(regex(regex)); }
+        /** @see CredentialsSpec#setRequestingScheme(Pattern) */
+        public void setRequestingScheme(@Nullable String regex)   { this.delegate.setRequestingScheme(regex(regex)); }
+        /** @see CredentialsSpec#setRequestingUrl(Pattern) */
+        public void setRequestingUrl(@Nullable String regex)      { this.delegate.setRequestingUrl(regex(regex)); }
+        /** @see CredentialsSpec#setRequestorType(Pattern) */
+        public void setRequestorType(@Nullable String regex)      { this.delegate.setRequestorType(regex(regex)); }
+        /** @see CredentialsSpec#setDeny(boolean) */
+        public void setDeny(boolean value)                        { this.delegate.setDeny(value); }
+
+        /**
+         * The user name to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
+         * <em>not</em> configuring a user name.
+         */
+        public void
+        setUserName(String userName) {
+            this.delegate.setUserName(!userName.isEmpty() && !"-".equals(userName) ? userName : null);
+        }
+
+        /**
+         * The password to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
+         * <em>not</em> configuring a password.
+         */
+        public void
+        setPassword(@Nullable char[] password) {
+
+            this.delegate.setPassword((
+                password == null
+                || password.length == 0
+                || (password.length == 1 && password[0] == '-')
+            ) ? null : password);
+        }
+
+        @Override public int     hashCode()                   { return this.delegate.hashCode();  }
+        @Override public boolean equals(@Nullable Object obj) { return this.delegate.equals(obj); }
+    }
+    
     // Must be PUBLIC so they are JAVADOC-referencable through "@value". SUPPRESS CHECKSTYLE Javadoc:2
     public static final String DEFAULT_STORE_MODE = "NONE";
     public static final String DEFAULT_CACHE_MODE = "USER_NAMES_AND_PASSWORDS";
     
-    @Nullable private String            dialogLabel;
-    private CacheMode                   cacheMode   = CacheMode.valueOf(DEFAULT_CACHE_MODE);
-    private StoreMode                   storeMode   = StoreMode.valueOf(DEFAULT_STORE_MODE);
-    private final List<CredentialsSpec> credentials = new ArrayList<CredentialsSpec>();
+    @Nullable private String             dialogLabel;
+    private CacheMode                    cacheMode   = CacheMode.valueOf(DEFAULT_CACHE_MODE);
+    private StoreMode                    storeMode   = StoreMode.valueOf(DEFAULT_STORE_MODE);
+    private final List<CredentialsSpec2> credentials = new ArrayList<CredentialsSpec2>();
 
     private boolean destroyed;
 
+    @Override protected void
+    finalize() { this.destroy(); }
+
     @Override public void
     destroy() {
-        for (CredentialsSpec ce : this.credentials) ce.destroy();
+        for (CredentialsSpec2 ce : this.credentials) ce.destroy();
         this.destroyed = true;
     }
 
@@ -127,48 +192,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     isDestroyed() { return this.destroyed; }
 
     /**
-     * The text of the label in the authentication dialog. If the text starts with "{@code <html>}", then it may
-     * contain {@linkplain SwingDialogTask HTML markup}.
-     * <p>
-     *   The following arguments are replaced within the message:
-     * </p>
-     * <dl>
-     *   <dt>{0}</dt>
-     *   <dd>
-     *     The "key" to the authentication, which is composed like this:<br />
-     *     <var>requestor-type</var>{@code /}<var>requesting-protocol</var>{@code /}<var>requesting-host</var>{@code
-     *     /}<var>requesting-port</var>{@code /}<var>requesting-scheme</var>{@code /}</br>
-     *     Example value: {@code "PROXY/http/proxy.company.com/8080/Company internet proxy"}
-     *   </dd>
-     *   
-     *   <dt>{1}, {2}</dt>
-     *   <dd>The requesting host</dd>
-     *   
-     *   <dt>{3}, {4}</dt>
-     *   <dd>The requesting site</dd>
-     *   
-     *   <dt>{5}, {6}</dt>
-     *   <dd>The requesting port</dd>
-     *   
-     *   <dt>{7}, {8}</dt>
-     *   <dd>The requesting protocol</dd>
-     *   
-     *   <dt>{9}, {10}</dt>
-     *   <dd>The requesting prompt</dd>
-     *   
-     *   <dt>{11}, {12}</dt>
-     *   <dd>The requesting scheme</dd>
-     *   
-     *   <dt>{13}, {14}</dt>
-     *   <dd>The requesting URL</dd>
-     *   
-     *   <dt>{15}, {16}</dt>
-     *   <dd>The requestor type</dd>
-     * </dl>
-     * <p>
-     *   The default value is
-     * </p>
-     * <blockquote><pre>{@value CustomAuthenticator#DEFAULT_DIALOG_LABEL}</pre></blockquote>
+     * @see CustomAuthenticator#setDialogLabel(String)
      */
     public void
     setDialogLabel(String value) { this.dialogLabel = value; }
@@ -193,25 +217,24 @@ class SetAuthenticatorTask extends Task implements Destroyable {
 
     /**
      * Every time a server requests user name/password authentication, the {@link
-     * #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelements are checked, and the <b>first</b>
-     * that matches the request determines the user name and password.
+     * #addConfiguredCredentials(CredentialsSpec2)} subelements are checked, and the <b>first</b> that matches the
+     * request determines the user name and password.
      * <p>
-     *   A {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement matches iff the requesting
-     *   host, site, port, protocol, url, scheme and requestor type all match the respective attributes.
+     *   A {@link #addConfiguredCredentials(CredentialsSpec2)} subelement matches iff the requesting host, site, port,
+     *   protocol, url, scheme and requestor type all match the respective attributes.
      * </p>
      * <p>
-     *   If no {@link CredentialsSpec#setUserName(String)} and/or no {@link
-     *   CredentialsSpec#setPassword(char[])} are configured, then the user is prompted for the missing user name
-     *   and/or password.
+     *   If no {@link CredentialsSpec2#setUserName(String)} and/or no {@link CredentialsSpec2#setPassword(char[])} are
+     *   configured, then the user is prompted for the missing user name and/or password.
      * </p>
      * <p>
-     *   When this task is executed multiply, then the configured {@link
-     *   #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} <em>add up</em>, i.e. previously configured
-     *   credentials are never erased and always take precedence over newly configured ones.
+     *   When this task is executed multiply, then the configured {@link #addConfiguredCredentials(CredentialsSpec2)}
+     *   <em>add up</em>, i.e. previously configured credentials are never erased and always take precedence over newly
+     *   configured ones.
      * </p>
      */
     public void
-    addConfiguredCredentials(CredentialsSpec credentials) { this.credentials.add(credentials); }
+    addConfiguredCredentials(CredentialsSpec2 credentials) { this.credentials.add(credentials); }
 
     @Override public void
     execute() {
@@ -220,16 +243,16 @@ class SetAuthenticatorTask extends Task implements Destroyable {
 
         synchronized (SetAuthenticatorTask.class) {
 
-            // Install the "MyAuthenticator" exactly ONCE.
-            CustomAuthenticator ma = SetAuthenticatorTask.myAuthenticator;
-            if (ma == null) {
-                ma = (SetAuthenticatorTask.myAuthenticator = new CustomAuthenticator(this.cacheMode, this.storeMode));
-                if (this.dialogLabel != null) ma.setDialogLabel(this.dialogLabel);
-                Authenticator.setDefault(ma);
+            // Install the "CustomAuthenticator" exactly ONCE.
+            CustomAuthenticator ca = SetAuthenticatorTask.myAuthenticator;
+            if (ca == null) {
+                ca = (SetAuthenticatorTask.myAuthenticator = new CustomAuthenticator(this.cacheMode, this.storeMode));
+                if (this.dialogLabel != null) ca.setDialogLabel(this.dialogLabel);
+                Authenticator.setDefault(ca);
             }
 
-            // Add the configured credentials to the MyAuthenticator.
-            ma.addCredentials(this.credentials);
+            // Add the configured credentials to the CustomAuthenticator.
+            for (CredentialsSpec2 c : this.credentials) ca.addCredentials(Collections.singleton(c.delegate));
         }
     }
 
@@ -237,4 +260,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
      * Our singleton authenticator.
      */
     @Nullable private static CustomAuthenticator myAuthenticator;
+
+    @Nullable private static Pattern
+    regex(@Nullable String regex) { return regex == null ? null : Pattern.compile(regex); }
 }
