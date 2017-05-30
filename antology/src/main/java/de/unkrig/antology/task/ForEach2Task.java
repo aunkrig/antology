@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import org.apache.tools.ant.BuildException;
@@ -52,7 +51,9 @@ import org.apache.tools.ant.types.resources.URLProvider;
 import de.unkrig.antology.task.BreakTask.BreakException;
 import de.unkrig.antology.task.ContinueTask.ContinueException;
 import de.unkrig.antology.util.Logging;
+import de.unkrig.commons.lang.ObjectUtil;
 import de.unkrig.commons.nullanalysis.Nullable;
+import de.unkrig.commons.util.collections.IterableUtil;
 import de.unkrig.commons.util.time.Duration;
 import de.unkrig.commons.util.time.PointOfTime;
 
@@ -132,7 +133,7 @@ import de.unkrig.commons.util.time.PointOfTime;
 public
 class ForEach2Task extends Task {
 
-    private static final Iterable<?> DEFAULT_ITERABLE = ForEach2Task.infinite();
+    private static final Iterable<?> DEFAULT_ITERABLE = IterableUtil.foR(1, Integer.MAX_VALUE);
 
     private
     interface PrePost {
@@ -152,7 +153,7 @@ class ForEach2Task extends Task {
     /**
      * The default value for the {@link #setDelimiter(String)}.
      */
-    public static final String  DEFAULT_DELIMITER = ",";
+    public static final String DEFAULT_DELIMITER = ",";
 
     /**
      * The default value for the {@link #setTrim(boolean)} flag.
@@ -221,35 +222,7 @@ class ForEach2Task extends Task {
      * Iterate over the values "1", "2", "3", ... "<var>N</var>".
      */
     public void
-    setCount(final int n) {
-        this.setIterable(new Iterable<Object>() {
-
-            @Override public Iterator<Object>
-            iterator() {
-                return new Iterator<Object>() {
-
-                    /** Counts from 1 to 'value'. */
-                    int idx = 1;
-
-                    @Override public boolean
-                    hasNext() {
-                        return this.idx <= n;
-                    }
-
-                    @Override public Object
-                    next() {
-                        if (this.idx > n) throw new NoSuchElementException();
-                        return this.idx++;
-                    }
-
-                    @Override public void
-                    remove() {
-                        throw new UnsupportedOperationException("remove");
-                    }
-                };
-            }
-        });
-    }
+    setCount(final int n) { this.setIterable(IterableUtil.foR(1, n + 1)); }
 
     /**
      * The name of the dynamic attribute that refers to the current element.
@@ -448,10 +421,7 @@ class ForEach2Task extends Task {
                 elementsAreResources = false;
             }
 
-            final String quantityUnit = ForEach2Task.or(
-                this.quantityUnit,
-                elementsAreResources ? "bytes" : "elements"
-            );
+            final String quantityUnit = ObjectUtil.or(this.quantityUnit, elementsAreResources ? "bytes" : "elements");
 
             // Iteration state.
             final long[]     previousQuantity = new long[1];
@@ -479,7 +449,7 @@ class ForEach2Task extends Task {
                     long currentQuantity = ForEach2Task.this.quantityOfElement(element, elementsAreResources);
 
                     PointOfTime currentBeginning = (
-                        this.currentBeginning = ForEach2Task.or(ForEach2Task.this.currentBeginning, new PointOfTime())
+                        this.currentBeginning = ObjectUtil.or(ForEach2Task.this.currentBeginning, new PointOfTime())
                     );
 
                     Double remainingQuantity = (
@@ -523,7 +493,7 @@ class ForEach2Task extends Task {
                     PointOfTime currentBeginning = this.currentBeginning;
                     assert currentBeginning != null;
 
-                    Duration currentDuration = ForEach2Task.or(
+                    Duration currentDuration = ObjectUtil.or(
                         ForEach2Task.this.currentDuration,
                         remainingBeginning.subtract(currentBeginning)
                     );
@@ -637,27 +607,5 @@ class ForEach2Task extends Task {
             elementIsResource ? ((Resource) element).getSize() :
             1
         );
-    }
-
-    private static Iterable<Integer>
-    infinite() {
-        return new Iterable<Integer>() {
-
-            @Override public Iterator<Integer>
-            iterator() {
-
-                return new Iterator<Integer>() {
-                    private int idx;
-                    @Override public boolean hasNext() { return true; }
-                    @Override public Integer next()    { return ++this.idx; }
-                    @Override public void    remove()  { throw new UnsupportedOperationException("remove"); }
-                };
-            }
-        };
-    }
-
-    private static <T> T
-    or(@Nullable T x, T y) {
-        return x != null ? x : y;
     }
 }
