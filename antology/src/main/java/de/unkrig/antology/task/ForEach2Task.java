@@ -153,7 +153,11 @@ class ForEach2Task extends Task {
      * The default value for the {@link #setDelimiter(String)}.
      */
     public static final String  DEFAULT_DELIMITER = ",";
-    public static final boolean DEFAULT_TRIM      = true;
+
+    /**
+     * The default value for the {@link #setTrim(boolean)} flag.
+     */
+    public static final boolean DEFAULT_TRIM = true;
 
     @Nullable private String      param;
     private String                delimiter = ForEach2Task.DEFAULT_DELIMITER;
@@ -376,6 +380,7 @@ class ForEach2Task extends Task {
         return macroDef.createSequential();
     }
 
+    /***/
     public static final
     class MapElement {
 
