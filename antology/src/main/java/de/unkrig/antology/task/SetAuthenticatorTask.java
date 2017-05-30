@@ -27,7 +27,9 @@
 package de.unkrig.antology.task;
 
 import java.net.Authenticator;
+import java.net.InetAddress;
 import java.net.URLConnection;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,22 +60,22 @@ import de.unkrig.commons.nullanalysis.Nullable;
  * </p>
  * <ul>
  *   <li>
- *     The authentication request is matched against the {@link CredentialsSpec#setRequestingHost(Regex)}, {@link
- *     CredentialsSpec#setRequestingSite(Regex)}, {@link CredentialsSpec#setRequestingPort(Regex)}, {@link
- *     CredentialsSpec#setRequestingProtocol(Regex)}, {@link CredentialsSpec#setRequestingPrompt(Regex)}, {@link
- *     CredentialsSpec#setRequestingScheme(Regex)}, {@link CredentialsSpec#setRequestingURL(Regex)} and {@link
- *     CredentialsSpec#setRequestorType(Regex)} of all {@link CredentialsSpec} subelements,
+ *     The authentication request is matched against the {@link CredentialsSpec2#setRequestingHost(String)}, {@link
+ *     CredentialsSpec2#setRequestingSite(String)}, {@link CredentialsSpec2#setRequestingPort(String)}, {@link
+ *     CredentialsSpec2#setRequestingProtocol(String)}, {@link CredentialsSpec2#setRequestingPrompt(String)}, {@link
+ *     CredentialsSpec2#setRequestingScheme(String)}, {@link CredentialsSpec2#setRequestingUrl(String)} and {@link
+ *     CredentialsSpec2#setRequestorType(String)} of all {@link CredentialsSpec2} subelements,
  *     in the given order. This process stops at the first match.
  *   </li>
  *   <li>
- *     If the matching {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement has both
- *     {@link CredentialsSpec#setUserName(String)} <em>and</em> {@link CredentialsSpec#setPassword(char[])}
+ *     If the matching {@link #addConfiguredCredentials(CredentialsSpec2)} subelement has both
+ *     {@link CredentialsSpec2#setUserName(String)} <em>and</em> {@link CredentialsSpec2#setPassword(char[])}
  *     configured, then that user name-password pair is returned.
  *   </li>
  *   <li>
  *     Otherwise the user is prompted with a {@link JOptionPane} dialog for a user name and a password. (Iff the
- *     matching {@link #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)} subelement configured a {@link
- *     CredentialsSpec#setUserName(String)}, then that user name is pre-filled in.)<br />
+ *     matching {@link #addConfiguredCredentials(CredentialsSpec2)} subelement configured a {@link
+ *     CredentialsSpec2#setUserName(String)}, then that user name is pre-filled in.)<br />
  *     <img width="372" height="342" src="doc-files/setAuthenticator_httpAuthentication.png" />
  *   </li>
  *   <li>
@@ -103,13 +105,13 @@ import de.unkrig.commons.nullanalysis.Nullable;
  * <img width="481" height="191" src="doc-files/setAuthenticator_useAuthenticationStore.png" />
  *
  * @see Authenticator#setDefault(Authenticator)
- * @see #addConfiguredCredentials(CustomAuthenticator.CredentialsSpec)
+ * @see #addConfiguredCredentials(CredentialsSpec2)
  */
 public
 class SetAuthenticatorTask extends Task implements Destroyable {
 
     // We have to wrap the CredentialsSpec object for ANT, because java.util.Pattern has no single-string constructor.
-    
+
     /**
      * @see CredentialsSpec
      */
@@ -122,24 +124,82 @@ class SetAuthenticatorTask extends Task implements Destroyable {
         @Override public void    destroy()     { this.delegate.destroy();            }
         @Override public boolean isDestroyed() { return this.delegate.isDestroyed(); }
 
-        /** @see CredentialsSpec#setRequestingHost(Pattern) */
-        public void setRequestingHost(@Nullable String regex)     { this.delegate.setRequestingHost(regex(regex)); }
-        /** @see CredentialsSpec#setRequestingSite(Pattern) */
-        public void setRequestingSite(@Nullable String regex)     { this.delegate.setRequestingSite(regex(regex)); }
-        /** @see CredentialsSpec#setRequestingPort(Pattern) */
-        public void setRequestingPort(@Nullable String regex)     { this.delegate.setRequestingPort(regex(regex)); }
-        /** @see CredentialsSpec#setRequestingProtocol(Pattern) */
-        public void setRequestingProtocol(@Nullable String regex) { this.delegate.setRequestingProtocol(regex(regex)); }
-        /** @see CredentialsSpec#setRequestingPrompt(Pattern) */
-        public void setRequestingPrompt(@Nullable String regex)   { this.delegate.setRequestingPrompt(regex(regex)); }
-        /** @see CredentialsSpec#setRequestingScheme(Pattern) */
-        public void setRequestingScheme(@Nullable String regex)   { this.delegate.setRequestingScheme(regex(regex)); }
-        /** @see CredentialsSpec#setRequestingUrl(Pattern) */
-        public void setRequestingUrl(@Nullable String regex)      { this.delegate.setRequestingUrl(regex(regex)); }
-        /** @see CredentialsSpec#setRequestorType(Pattern) */
-        public void setRequestorType(@Nullable String regex)      { this.delegate.setRequestorType(regex(regex)); }
-        /** @see CredentialsSpec#setDeny(boolean) */
-        public void setDeny(boolean value)                        { this.delegate.setDeny(value); }
+        /**
+         * Hostname pattern of the site or proxy. The default is "any host".
+         */
+        public void
+        setRequestingHost(@Nullable String regex) {
+            this.delegate.setRequestingHost(SetAuthenticatorTask.regex(regex));
+        }
+
+        /**
+         * {@link InetAddress} pattern of the site. The default is "any site".
+         */
+        public void
+        setRequestingSite(@Nullable String regex) {
+            this.delegate.setRequestingSite(SetAuthenticatorTask.regex(regex));
+        }
+
+        /**
+         * The pattern to match against the "port number for the requested connection". The default is "any port".
+         */
+        public void
+        setRequestingPort(@Nullable String regex) {
+            this.delegate.setRequestingPort(SetAuthenticatorTask.regex(regex));
+        }
+
+        /**
+         * The pattern to match against "the protocol that's requesting the connection". The default is "any protocol".
+         */
+        public void
+        setRequestingProtocol(@Nullable String regex) {
+            this.delegate.setRequestingProtocol(SetAuthenticatorTask.regex(regex));
+        }
+
+        /**
+         * The pattern to match against "the prompt string given by the requestor (the "realm" for <a
+         * href="http://www.ietf.org/rfc/rfc2617.txt">HTTP authentication</a>)". The default is "any prompt string".
+         */
+        public void
+        setRequestingPrompt(@Nullable String regex) {
+            this.delegate.setRequestingPrompt(SetAuthenticatorTask.regex(regex));
+        }
+
+        /**
+         * The pattern to match against "the scheme of the requestor". The default is "any scheme".
+         */
+        public void
+        setRequestingScheme(@Nullable String regex) {
+            this.delegate.setRequestingScheme(SetAuthenticatorTask.regex(regex));
+        }
+
+        /**
+         * The pattern to match against "the URL that resulted in this request for authentication". The default is "any
+         * URL".
+         */
+        public void
+        setRequestingUrl(@Nullable String regex) { this.delegate.setRequestingUrl(SetAuthenticatorTask.regex(regex)); }
+
+        /**
+         * Whether the requestor is a Proxy or a Server.
+         * <dl>
+         *   <dt>{@code PROXY}</dt>
+         *   <dd>Entity requesting authentication is a HTTP proxy server.</dd>
+         *   <dt>{@code SERVER}</dt>
+         *   <dd>Entity requesting authentication is a HTTP origin server.</dd>
+         * </dl>
+         * <p>
+         *   The default is "any requestor type".
+         * </p>
+         */
+        public void
+        setRequestorType(@Nullable String regex) { this.delegate.setRequestorType(SetAuthenticatorTask.regex(regex)); }
+
+        /**
+         * If set to {@code true}, then {@link #setUserName(String)} and {@link #setPassword(char[])} are
+         * ignored, and authentication is <em>denied</em> for this spec. The default is "false".
+         */
+        public void setDeny(boolean value) { this.delegate.setDeny(value); }
 
         /**
          * The user name to use iff this {@code <credentials>} element matches. Value "{@code -}" is equivalent to
@@ -167,14 +227,14 @@ class SetAuthenticatorTask extends Task implements Destroyable {
         @Override public int     hashCode()                   { return this.delegate.hashCode();  }
         @Override public boolean equals(@Nullable Object obj) { return this.delegate.equals(obj); }
     }
-    
+
     // Must be PUBLIC so they are JAVADOC-referencable through "@value". SUPPRESS CHECKSTYLE Javadoc:2
     public static final String DEFAULT_STORE_MODE = "NONE";
     public static final String DEFAULT_CACHE_MODE = "USER_NAMES_AND_PASSWORDS";
-    
+
     @Nullable private String             dialogLabel;
-    private CacheMode                    cacheMode   = CacheMode.valueOf(DEFAULT_CACHE_MODE);
-    private StoreMode                    storeMode   = StoreMode.valueOf(DEFAULT_STORE_MODE);
+    private CacheMode                    cacheMode   = CacheMode.valueOf(SetAuthenticatorTask.DEFAULT_CACHE_MODE);
+    private StoreMode                    storeMode   = StoreMode.valueOf(SetAuthenticatorTask.DEFAULT_STORE_MODE);
     private final List<CredentialsSpec2> credentials = new ArrayList<CredentialsSpec2>();
 
     private boolean destroyed;
@@ -192,7 +252,72 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     isDestroyed() { return this.destroyed; }
 
     /**
-     * @see CustomAuthenticator#setDialogLabel(String)
+     * The text of the label in the authentication dialog, in {@link MessageFormat} format.
+     * <p>
+     *   The following arguments are replaced within the message:
+     * </p>
+     * <dl>
+     *   <dt>{0}</dt>
+     *   <dd>
+     *     The "key" to the authentication, which is composed like this:<br />
+     *     <var>requestor-type</var>{@code /}<var>requesting-protocol</var>{@code /}<var>requesting-host</var>{@code
+     *     /}<var>requesting-port</var>{@code /}<var>requesting-scheme</var>{@code /}</br>
+     *     Example value: {@code "PROXY/http/proxy.company.com/8080/Negotiate"}
+     *   </dd>
+     *
+     *   <dt>{1}, {2}<sup>*</sup></dt>
+     *   <dd>The requesting host; see {@link CredentialsSpec2#setRequestingHost(String)}</dd>
+     *
+     *   <dt>{3}, {4}<sup>*</sup></dt>
+     *   <dd>The requesting site; see {@link CredentialsSpec2#setRequestingSite(String)}</dd>
+     *
+     *   <dt>{5}, {6}<sup>*</sup></dt>
+     *   <dd>The requesting port; see {@link CredentialsSpec2#setRequestingPort(String)}</dd>
+     *
+     *   <dt>{7}, {8}<sup>*</sup></dt>
+     *   <dd>The requesting protocol; see {@link CredentialsSpec2#setRequestingProtocol(String)}</dd>
+     *
+     *   <dt>{9}, {10}<sup>*</sup></dt>
+     *   <dd>The requesting prompt; see {@link CredentialsSpec2#setRequestingPrompt(String)}</dd>
+     *
+     *   <dt>{11}, {12}<sup>*</sup></dt>
+     *   <dd>The requesting scheme; see {@link CredentialsSpec2#setRequestingScheme(String)}</dd>
+     *
+     *   <dt>{13}, {14}<sup>*</sup></dt>
+     *   <dd>The requesting URL; see {@link CredentialsSpec2#setRequestingUrl(String)}</dd>
+     *
+     *   <dt>{15}, {16}<sup>*</sup></dt>
+     *   <dd>The requestor type; see {@link CredentialsSpec2#setRequestorType(String)}</dd>
+     * </dl>
+     * <p>
+     *   <sup>*</sup> Where the above list presents <em>two</em> placeholders, they expand as follows:
+     * </p>
+     * <ul>
+     *   <li>
+     *     If the value is either {@code null} or {@code ""} or {@code -1}, the two placeholders expand to {@code "0"}
+     *     and {@code ""}.
+     *   </li>
+     *   <li>
+     *     Otherwise, the two placeholders expand to {@code "1"} and the value.
+     *   </li>
+     * </ul>
+     * <p>
+     *   The default value is
+     * </p>
+     * <pre>
+     * &lt;html>
+     *   &lt;table>
+     *     {1,  choice, 0#|1#'&lt;tr>&lt;td>Host:    &lt;/td>&lt;td>'{2}'&lt;/td>&lt;/tr>'}
+     *     {3,  choice, 0#|1#'&lt;tr>&lt;td>Site:    &lt;/td>&lt;td>'{4}'&lt;/td>&lt;/tr>'}
+     *     {5,  choice, 0#|1#'&lt;tr>&lt;td>Port:    &lt;/td>&lt;td>'{6}'&lt;/td>&lt;/tr>'}
+     *     {7,  choice, 0#|1#'&lt;tr>&lt;td>Protocol:&lt;/td>&lt;td>'{8}'&lt;/td>&lt;/tr>'}
+     *     {9,  choice, 0#|1#'&lt;tr>&lt;td>Prompt:  &lt;/td>&lt;td>'{10}'&lt;/td>&lt;/tr>'}
+     *     {11, choice, 0#|1#'&lt;tr>&lt;td>Scheme:  &lt;/td>&lt;td>'{12}'&lt;/td>&lt;/tr>'}
+     *     {13, choice, 0#|1#'&lt;tr>&lt;td>URL:     &lt;/td>&lt;td>'{14}'&lt;/td>&lt;/tr>'}
+     *     {15, choice, 0#|1#'&lt;tr>&lt;td>Type:    &lt;/td>&lt;td>'{16}'&lt;/td>&lt;/tr>'}
+     *   &lt;/table>
+     * &lt;/html>
+     * </pre>
      */
     public void
     setDialogLabel(String value) { this.dialogLabel = value; }
@@ -200,7 +325,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     /**
      * Whether user names, user names and passwords, or none of both are remembered while the JVM is running.
      * This attribute takes effect only on the <em>first</em> execution of this task.
-     * 
+     *
      * @ant.defaultValue {@value #DEFAULT_CACHE_MODE}
      */
     public void
@@ -209,7 +334,7 @@ class SetAuthenticatorTask extends Task implements Destroyable {
     /**
      * Whether user names, user names and passwords, or none of both are persistently stored.
      * This attribute takes effect only on the <em>first</em> execution of this task.
-     * 
+     *
      * @ant.defaultValue {@value #DEFAULT_STORE_MODE}
      */
     public void
