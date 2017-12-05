@@ -15,6 +15,7 @@
 			url="http://adminapps.intra.swm.de/cgi-bin/tomcatservice3.exe?tomcatlist=dal-i.intra.swm.de&amp;serverlist=svdali03&amp;Aktion=Status"
 			httpFollowRedirects="false"
 			httpFollowRedirects2="true"
+			httpProxy="true"
 		>
 			<input stdout="true" />
 		</urlConnection>
@@ -29,6 +30,7 @@
 			url="http://adminapps.intra.swm.de/cgi-bin/tomcatservice3.exe?tomcatlist=dal-i.intra.swm.de&amp;serverlist=svdali03&amp;Aktion=Status"
 			httpFollowRedirects="false"
 			httpFollowRedirects2="true"
+			direct="true"
 		>
 			<input stdout="true">
 				<filterchain>
