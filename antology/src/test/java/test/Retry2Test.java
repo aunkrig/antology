@@ -39,7 +39,7 @@ import de.unkrig.commons.nullanalysis.Nullable;
 import junit.framework.ComparisonFailure;
 import junit.framework.TestCase;
 
-//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
+// SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ForEach2Task}.

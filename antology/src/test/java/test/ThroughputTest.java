@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import junit.framework.TestCase;
 
-//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
+// SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ThroughputTask}.

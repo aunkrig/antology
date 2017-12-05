@@ -36,7 +36,7 @@ import de.unkrig.commons.junit4.AssertRegex;
 import de.unkrig.commons.junit4.AssertString;
 import junit.framework.TestCase;
 
-//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
+// SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.ForEach2Task}.

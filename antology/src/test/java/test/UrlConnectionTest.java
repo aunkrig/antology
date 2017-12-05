@@ -34,7 +34,7 @@ import org.junit.Test;
 
 import de.unkrig.commons.junit4.AssertString;
 
-//CHECKSTYLE JavadocMethod|JavadocVariable:OFF
+// SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
  * Tests for the {@link de.unkrig.antcontrib.task.UrlConnectionTask}.
