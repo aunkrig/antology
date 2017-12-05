@@ -1022,7 +1022,7 @@ class SwingDialogTask extends Task {
             // selectionMode=...
             if (this.selectionMode != null) jList.setSelectionMode(this.selectionMode.intValue());
 
-            final int[] defaultIndices;
+            final int[] dis;
             if (LisT.this.defaultValues != null) {
                 if (LisT.this.defaultIndices != null) {
                     throw new BuildException("Only one of 'defaultValues=...' and 'defaultIndices=...' must be used");
@@ -1031,7 +1031,7 @@ class SwingDialogTask extends Task {
                 // defaultValues=..., delimiters=...
                 String[] defaultValues = SwingDialogTask.tokenize(LisT.this.defaultValues, LisT.this.delimiters);
 
-                defaultIndices = new int[defaultValues.length];
+                dis = new int[defaultValues.length];
                 for (int i = 0; i < defaultValues.length; i++) {
                     @Nullable Object defaultValue = defaultValues[i];
 
@@ -1039,25 +1039,25 @@ class SwingDialogTask extends Task {
                     if (idx == -1) {
                         throw new BuildException("Default value '" + defaultValue + "' is not a valid value");
                     }
-                    defaultIndices[i] = idx;
+                    dis[i] = idx;
                 }
 
                 swingDialogTask.beforeShow.add(new Runnable() {
-                    @Override public void run() {  LisT.select(jList, defaultIndices); }
+                    @Override public void run() {  LisT.select(jList, dis); }
                 });
             } else
             if (LisT.this.defaultIndices != null) {
 
                 // defaultIndices=..., delimiters=...
-                defaultIndices = SwingDialogTask.tokenizeIntegers(LisT.this.defaultIndices, LisT.this.delimiters);
+                dis = SwingDialogTask.tokenizeIntegers(LisT.this.defaultIndices, LisT.this.delimiters);
             } else
             {
-                defaultIndices = null;
+                dis = null;
             }
 
-            if (defaultIndices != null) {
+            if (dis != null) {
                 swingDialogTask.beforeShow.add(new Runnable() {
-                    @Override public void run() {  LisT.select(jList, defaultIndices); }
+                    @Override public void run() {  LisT.select(jList, dis); }
                 });
             }
 
