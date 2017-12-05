@@ -49,9 +49,7 @@ import org.apache.tools.ant.Task;
 import de.unkrig.antology.type.Subelement;
 import de.unkrig.commons.nullanalysis.Nullable;
 
-// CHECKSTYLE TypeName:OFF
-// CHECKSTYLE JavadocVariable:OFF
-// CHECKSTYLE JavadocMethod:OFF
+// SUPPRESS CHECKSTYLE TypeName|JavadocVariable|JavadocMethod:9999
 
 /**
  * Configures the JDK logging {@code java.util.logging}, also known as "JUL".
