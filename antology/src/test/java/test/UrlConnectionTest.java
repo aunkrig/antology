@@ -50,14 +50,14 @@ class UrlConnectionTest {
         this.rule.configureProject("target/test-classes/test_urlConnection.ant");
     }
 
-//    @Ignore
+    @Ignore
     @Test public void
     test1() {
         this.rule.executeTarget("test1");
         AssertString.assertContains("Statusabfrage des Tomcat f", this.rule.getOutput());
     }
 
-//    @Ignore
+    @Ignore
     @Test public void
     test2() {
         this.rule.executeTarget("test2");
