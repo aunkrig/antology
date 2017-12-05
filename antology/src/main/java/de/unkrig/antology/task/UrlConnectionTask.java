@@ -67,16 +67,26 @@ import de.unkrig.commons.nullanalysis.Nullable;
 /**
  * Connects to a resource, writes data to it and/or reads data from it.
  * <p>To configure HTTP authentication, use the {@link SetAuthenticatorTask} task.</p>
+ *
  * <p>The following attributes are mutually exclusive:</p>
  * <dl>
  *   <dd>{@link #setHttpChunkLength(int)}</dd>
  *   <dd>{@link #setHttpContentLength(int)}</dd>
  * </dl>
+ *
  * <p>Also the following attributes and subelements are mutually exclusive:</p>
  * <dl>
  *   <dd>{@link #setUrl(URL)}</dd>
  *   <dd>{@link #addConfiguredUrl(de.unkrig.antology.AbstractUrlConnectionTask.UrlElement)}</dd>
  * </dl>
+ *
+ * <p>Also the following attributes are mutually exclusive:</p>
+ * <dl>
+ *   <dd>{@link #setDirect(boolean)}</dd>
+ *   <dd>{@link #setHttpProxy(String)}</dd>
+ *   <dd>{@link #setSocksProxy(String)}</dd>
+ * </dl>
+ *
  * <p>
  *   To debug HTTP communication, you may want to execute the following <em>before</em> the {@code <urlConnection>}
  *   task:
@@ -777,48 +787,39 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
     private void
     execute2() throws IOException {
 
-        URL url = this.url;
-        if (url == null) throw new BuildException("No URL configured - configure 'url=...' or '<url>'");
+        URLConnection conn = this.openConnection();
 
-        this.log("url=" + url, Project.MSG_DEBUG);
+        for (int attempt = 0; attempt < 10; attempt++) {
 
-        for (int attempt = 0;; attempt++) {
-
-            if (attempt == 10) {
-                throw new IOException(
-                    "Giving up after "
-                    + attempt
-                    + " REDIRECTs (last location was '"
-                    + url.toString()
-                    + "')"
-                );
-            }
-
-            URLConnection conn = url.openConnection();
-            assert conn != null;
             this.log("conn=" + conn, Project.MSG_DEBUG);
 
             this.configureUrlConnection(conn);
+
             if (this.input  != null) conn.setDoInput(true);
             if (this.output != null) conn.setDoOutput(true);
+
             this.log("conn=" + conn, Project.MSG_DEBUG);
 
             if (conn instanceof HttpURLConnection) {
 
-                URL redirectLocation = this.execute((HttpURLConnection) conn);
-                if (redirectLocation == null) break;
-                url = redirectLocation;
+                URL redirectLocation = this.execute3((HttpURLConnection) conn);
+                if (redirectLocation == null) return;
+
+                // Received a REDIRECT; open connection to that location and continue.
+                conn = this.openConnection(redirectLocation);
             } else {
 
-                this.execute(conn);
-                break;
+                this.execute3(conn);
+                return;
             }
         }
+
+        throw new IOException("Giving up after 10 REDIRECTs (last location was '" + conn + "')");
     }
 
     /** For non-{@link HttpURLConnection}s. */
     private void
-    execute(URLConnection conn) throws IOException {
+    execute3(URLConnection conn) throws IOException {
 
         if (this.output != null) this.output.write(conn);
 
@@ -831,7 +832,7 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
      * @return {@code null}, or, if the server replied with a REDIRECT, the redirection location
      */
     @Nullable private URL
-    execute(HttpURLConnection httpConn) throws IOException {
+    execute3(HttpURLConnection httpConn) throws IOException {
 
         this.log("output=" + this.output, Project.MSG_DEBUG);
 

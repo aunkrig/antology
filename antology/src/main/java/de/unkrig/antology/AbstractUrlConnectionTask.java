@@ -26,14 +26,19 @@
 
 package de.unkrig.antology;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.ProjectComponent;
@@ -56,7 +61,7 @@ class AbstractUrlConnectionTask extends Task {
     /**
      * The URL configured for this task.
      */
-    @Nullable protected URL url;
+    @Nullable private URL url;
 
     /**
      * Whether the "httpFollowRedirects2" feature is configured.
@@ -74,6 +79,7 @@ class AbstractUrlConnectionTask extends Task {
     private int                               httpChunkLength   = -1;
     private int                               httpContentLength = -1;
     @Nullable private Boolean                 httpFollowRedirects;
+    @Nullable private Proxy                   proxy;
 
     // ATTRIBUTE SETTERS
 
@@ -168,6 +174,82 @@ class AbstractUrlConnectionTask extends Task {
         if (this.url != null) throw new BuildException("Cannot set more than one source");
         this.url = url;
     }
+
+    /**
+     * Configures a <em>direct</em> HTTP connection, and ignores any proxy configured with the {@code
+     * http[s].proxy(Host|Port)} system properties.
+     *
+     * @see URL#openConnection(Proxy)
+     * @see Proxy#NO_PROXY
+     * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Networking
+     *Properties</a>
+     */
+    public void
+    setDirect(boolean value) { this.setProxy(value ? Proxy.NO_PROXY : null); }
+
+    /**
+     * Configures an HTTP proxy, and overrides any proxy configured with the {@code http[s].proxy(Host|Port)} system
+     * properties.
+     *
+     * @ant.valueExplanation <var>hostname</var>{@code :}<var>port</var>
+     * @see                  URL#openConnection(Proxy)
+     * @see                  java.net.Proxy.Type#HTTP
+     * @see                  <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.ht
+     *ml">Networking Properties</a>
+     */
+    public void
+    setHttpProxy(String value) {
+        this.setProxy(new Proxy(Proxy.Type.HTTP, AbstractUrlConnectionTask.parseInetSocketAddress(value)));
+    }
+
+    /**
+     * Configures a SOCKS proxy, and overrides any proxy configured with the {@code http[s].proxy(Host|Port)} system
+     * properties.
+     *
+     * @ant.valueExplanation <var>hostname</var>{@code :}<var>port</var>
+     * @see                  URL#openConnection(Proxy)
+     * @see                  java.net.Proxy.Type#SOCKS
+     * @see                  <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.ht
+     *ml">Networking Properties</a>
+     */
+    public void
+    setSocksProxy(String value) {
+        this.setProxy(new Proxy(Proxy.Type.SOCKS, AbstractUrlConnectionTask.parseInetSocketAddress(value)));
+    }
+
+    private static InetSocketAddress
+    parseInetSocketAddress(String s) {
+
+        Matcher m = AbstractUrlConnectionTask.INET_SOCKET_ADDRESS_SPEC_PATTERN.matcher(s);
+        if (!m.matches()) {
+            throw new BuildException((
+                "Invalid socket address spec; must match \""
+                + AbstractUrlConnectionTask.INET_SOCKET_ADDRESS_SPEC_PATTERN
+                + "\""
+            ));
+        }
+
+        String hostname = m.group(1);
+        int    port     = Integer.parseInt(m.group(2));
+
+        return new InetSocketAddress(hostname, port);
+    }
+    private static final Pattern INET_SOCKET_ADDRESS_SPEC_PATTERN = Pattern.compile("(.*):(\\d+)");
+
+    private void
+    setProxy(@Nullable Proxy proxy) {
+
+        if (this.proxy != null) {
+            throw new BuildException(
+                "'direct=\"true\"', 'httpProxy=\"...\"' and 'socksProxy=\"...\"' are mutually exclusive"
+            );
+        }
+
+        this.proxy = proxy;
+    }
+
+    @Nullable protected Proxy
+    getProxy() { return this.proxy; }
 
     // SUBELEMENT ADDERS
 
@@ -371,6 +453,32 @@ class AbstractUrlConnectionTask extends Task {
         if (this.readTimeout          != -1)   conn.setReadTimeout(this.readTimeout);
         if (this.ifModifiedSince      != -1L)  conn.setIfModifiedSince(this.ifModifiedSince);
         if (this.useCaches            != null) conn.setUseCaches(this.useCaches);
+    }
+
+    /**
+     * Connects to the configured resource, honoring proxy settings.
+     *
+     * @see #setUrl(URL)
+     * @see #setDirect(boolean)
+     * @see #setHttpProxy(String)
+     * @see #setSocksProxy(String)
+     */
+    protected URLConnection
+    openConnection() throws IOException {
+
+        URL url = this.url;
+        if (url == null) throw new BuildException("No URL configured - configure 'url=...' or '<url>'");
+
+        return this.openConnection(url);
+    }
+
+    /**
+     * Connects to the given resource, honoring proxy settings. Notice that this method <em>ignores/em> the
+     * URL configurd with {@link #setUrl(URL)}.
+     */
+    protected URLConnection
+    openConnection(URL url) throws IOException {
+        return this.proxy == null ? url.openConnection() : url.openConnection(this.proxy);
     }
 
     /**

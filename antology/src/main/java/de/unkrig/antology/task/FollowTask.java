@@ -81,6 +81,25 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *     href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35.2">Range</a></code>" request header.
  *   </li>
  * </ul>
+ *
+ * <p>The following attributes are mutually exclusive:</p>
+ * <dl>
+ *   <dd>{@link #setHttpChunkLength(int)}</dd>
+ *   <dd>{@link #setHttpContentLength(int)}</dd>
+ * </dl>
+ *
+ * <p>Also the following attributes and subelements are mutually exclusive:</p>
+ * <dl>
+ *   <dd>{@link #setUrl(URL)}</dd>
+ *   <dd>{@link #addConfiguredUrl(de.unkrig.antology.AbstractUrlConnectionTask.UrlElement)}</dd>
+ * </dl>
+ *
+ * <p>Also the following attributes are mutually exclusive:</p>
+ * <dl>
+ *   <dd>{@link #setDirect(boolean)}</dd>
+ *   <dd>{@link #setHttpProxy(String)}</dd>
+ *   <dd>{@link #setSocksProxy(String)}</dd>
+ * </dl>
  */
 public
 class FollowTask extends AbstractUrlConnectionTask {
@@ -199,10 +218,7 @@ class FollowTask extends AbstractUrlConnectionTask {
     private void
     execute2() throws Exception {
 
-        final URL url  = this.url;
-        if (url == null) throw new BuildException("Source missing - specify \"file=...\" or \"url=...\"");
-
-        final Followable followable = this.urlFollowable(url);
+        final Followable followable = this.urlFollowable();
 
         long expiration = this.timeout <= 0 ? Long.MAX_VALUE : System.currentTimeMillis() + 1000L * this.timeout;
 
@@ -247,14 +263,14 @@ class FollowTask extends AbstractUrlConnectionTask {
     }
 
     private Followable
-    urlFollowable(final URL url) throws IOException {
+    urlFollowable() throws IOException {
 
         return new Followable() {
 
             long previousSize; // -1 if unknown
             {
                 try {
-                    URLConnection conn = url.openConnection();
+                    URLConnection conn = FollowTask.this.openConnection();
                     this.previousSize = conn.getContentLength();
                 } catch (FileNotFoundException fnfe) {
 
@@ -267,7 +283,7 @@ class FollowTask extends AbstractUrlConnectionTask {
             long previousModificationTime; // 0 if unknown
             {
                 try {
-                    URLConnection conn = url.openConnection();
+                    URLConnection conn = FollowTask.this.openConnection();
                     this.previousModificationTime = conn.getLastModified();
                 } catch (FileNotFoundException fnfe) {
 
@@ -282,7 +298,7 @@ class FollowTask extends AbstractUrlConnectionTask {
 
                 URLConnection conn;
                 try {
-                    conn = url.openConnection();
+                    conn = FollowTask.this.openConnection();
 
                     FollowTask.this.configureUrlConnection(conn);
 
@@ -320,7 +336,7 @@ class FollowTask extends AbstractUrlConnectionTask {
 
                     if (httpConn != null) {
                         httpConn.disconnect();
-                        httpConn = (HttpURLConnection) (conn = url.openConnection());
+                        httpConn = (HttpURLConnection) (conn = FollowTask.this.openConnection());
                         FollowTask.this.configureUrlConnection(httpConn);
                         FollowTask.this.configureHttpUrlConnection(httpConn);
                         if (this.previousSize != -1) {
