@@ -39,7 +39,7 @@ import junit.framework.TestCase;
 // SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
- * Tests for the {@link de.unkrig.antcontrib.task.ForEach2Task}.
+ * Tests for the {@link de.unkrig.antology.task.ForEach2Task}.
  */
 public
 class ForEach2Test {

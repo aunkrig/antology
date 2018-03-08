@@ -36,7 +36,7 @@ import junit.framework.TestCase;
 // SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
- * Tests for the {@link de.unkrig.antcontrib.task.ThroughputTask}.
+ * Tests for the {@link de.unkrig.antology.task.ThroughputTask}.
  */
 public
 class ThroughputTest {

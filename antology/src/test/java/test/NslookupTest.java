@@ -37,7 +37,7 @@ import de.unkrig.commons.junit4.AssertRegex;
 // SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
- * Tests for the {@link de.unkrig.antcontrib.task.FollowTask}.
+ * Tests for the {@link de.unkrig.antology.task.FollowTask}.
  */
 public
 class NslookupTest {

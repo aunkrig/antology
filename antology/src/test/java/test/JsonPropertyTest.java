@@ -36,7 +36,7 @@ import de.unkrig.commons.junit4.AssertString;
 // SUPPRESS CHECKSTYLE Javadoc:9999
 
 /**
- * Tests for the {@link de.unkrig.antcontrib.task.UrlConnectionTask}.
+ * Tests for the {@link de.unkrig.antology.task.UrlConnectionTask}.
  */
 public
 class JsonPropertyTest {
