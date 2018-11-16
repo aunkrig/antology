@@ -1,0 +1,22 @@
+
+<project>
+	<taskdef resource="de/unkrig/antology/ant.xml">
+		<classpath>
+			<pathelement location="../antology/target/antology-2.0.0-SNAPSHOT-jar-with-dependencies.jar" />
+		</classpath>
+	</taskdef>
+
+	<target name="test1">
+		<swingLookAndFeel system="true" />
+		<setAuthenticator store="USER_NAMES_AND_PASSWORDS">
+			<credentials />
+		</setAuthenticator>
+		<urlConnection url="http://jugm.de/members/private/archiv/intro_to_neo4j.pdf">
+			<input discard="true">
+				<filterchain>
+					<progress />
+				</filterchain>
+			</input>
+		</urlConnection>
+	</target>
+</project>
