@@ -33,7 +33,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 /**
- * An task which does {@link CookieHandler#setDefault(CookieHandler) CookieHandler.setDefault(new CookieManager())}.
+ * A task which does {@link CookieHandler#setDefault(CookieHandler) CookieHandler.setDefault(new CookieManager())}.
  */
 public
 class SetCookieHandlerTask extends Task {
@@ -48,9 +48,14 @@ class SetCookieHandlerTask extends Task {
     public void
     setEnable(boolean enable) { this.enable = enable; }
 
-
     @Override public void
     execute() throws BuildException {
-        CookieHandler.setDefault(this.enable ? new CookieManager() : null);
+    	if (this.enable) {
+    		CookieHandler ch = CookieHandler.getDefault();
+    		if (ch instanceof CookieManager) return;
+    		CookieHandler.setDefault(new CookieManager());
+    	} else {
+    		CookieHandler.setDefault(null);
+    	}
     }
 }
