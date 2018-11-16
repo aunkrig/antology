@@ -4,25 +4,27 @@
 	<!-- The ANTLIB file, as described in http://ant.apache.org/manual/Types/antlib.html. -->
 
 	<!-- org.apache.tools.ant.Task definitions. -->
-	<taskdef name="break"            classname="de.unkrig.antology.task.BreakTask" />
-	<taskdef name="continue"         classname="de.unkrig.antology.task.ContinueTask" />
-	<taskdef name="follow"           classname="de.unkrig.antology.task.FollowTask" />
-	<taskdef name="forEach2"         classname="de.unkrig.antology.task.ForEach2Task" />
-	<taskdef name="ftp2"             classname="org.apache.tools.ant.taskdefs.optional.net2.FTP2" />
-	<taskdef name="jsonProperty"     classname="de.unkrig.antology.task.JsonPropertyTask" />
-	<taskdef name="log"              classname="de.unkrig.antology.task.LogTask" />
-	<taskdef name="logging"          classname="de.unkrig.antology.task.LoggingTask" />
-	<taskdef name="nslookup"         classname="de.unkrig.antology.task.NslookupTask" />
-	<taskdef name="propertyXml2"     classname="de.unkrig.antology.task.PropertyXml2Task" />
-	<taskdef name="retry2"           classname="de.unkrig.antology.task.Retry2Task" />
-	<taskdef name="setAuthenticator" classname="de.unkrig.antology.task.SetAuthenticatorTask" />
-	<taskdef name="setCookieHandler" classname="de.unkrig.antology.task.SetCookieHandlerTask" />
-	<taskdef name="simpleLogging"    classname="de.unkrig.antology.task.SimpleLoggingTask" />
-	<taskdef name="swingDialog"      classname="de.unkrig.antology.task.SwingDialogTask" />
-	<taskdef name="swingLookAndFeel" classname="de.unkrig.antology.task.SwingLookAndFeelTask" />
-	<taskdef name="throughput"       classname="de.unkrig.antology.task.ThroughputTask" />
-	<taskdef name="urlConnection"    classname="de.unkrig.antology.task.UrlConnectionTask" />
-	<taskdef name="xmlProperty2"     classname="de.unkrig.antology.task.XmlProperty2Task" />
+	<taskdef name="break"               classname="de.unkrig.antology.task.BreakTask" />
+	<taskdef name="continue"            classname="de.unkrig.antology.task.ContinueTask" />
+	<taskdef name="cookieHandler"       classname="de.unkrig.antology.task.CookieHandlerTask" />
+	<taskdef name="follow"              classname="de.unkrig.antology.task.FollowTask" />
+	<taskdef name="forEach2"            classname="de.unkrig.antology.task.ForEach2Task" />
+	<taskdef name="ftp2"                classname="org.apache.tools.ant.taskdefs.optional.net2.FTP2" />
+	<taskdef name="httpsUrlConnections" classname="de.unkrig.antology.task.HttpsUrlConnectionsTask" />
+	<taskdef name="jsonProperty"        classname="de.unkrig.antology.task.JsonPropertyTask" />
+	<taskdef name="log"                 classname="de.unkrig.antology.task.LogTask" />
+	<taskdef name="logging"             classname="de.unkrig.antology.task.LoggingTask" />
+	<taskdef name="nslookup"            classname="de.unkrig.antology.task.NslookupTask" />
+	<taskdef name="propertyXml2"        classname="de.unkrig.antology.task.PropertyXml2Task" />
+	<taskdef name="retry2"              classname="de.unkrig.antology.task.Retry2Task" />
+	<taskdef name="setAuthenticator"    classname="de.unkrig.antology.task.SetAuthenticatorTask" />
+	<taskdef name="setCookieHandler"    classname="de.unkrig.antology.task.SetCookieHandlerTask" />
+	<taskdef name="simpleLogging"       classname="de.unkrig.antology.task.SimpleLoggingTask" />
+	<taskdef name="swingDialog"         classname="de.unkrig.antology.task.SwingDialogTask" />
+	<taskdef name="swingLookAndFeel"    classname="de.unkrig.antology.task.SwingLookAndFeelTask" />
+	<taskdef name="throughput"          classname="de.unkrig.antology.task.ThroughputTask" />
+	<taskdef name="urlConnection"       classname="de.unkrig.antology.task.UrlConnectionTask" />
+	<taskdef name="xmlProperty2"        classname="de.unkrig.antology.task.XmlProperty2Task" />
 
 	<!-- org.apache.tools.ant.types.ResourceCollection definitions. -->
 	<componentdef name="literalResource"         classname="de.unkrig.antology.type.LiteralResource" />
@@ -31,8 +33,9 @@
 	<componentdef name="resourceNames"           classname="de.unkrig.antology.type.ResourceNames" />
 
 	<!-- org.apache.tools.ant.filters.ChainableReader definitions. -->
-	<componentdef name="progress" classname="de.unkrig.antology.filter.ProgressFilter" />
-	<componentdef name="tee"      classname="de.unkrig.antology.filter.TeeFilter" />
+	<componentdef name="progress"   classname="de.unkrig.antology.filter.ProgressFilter" />
+	<componentdef name="tee"        classname="de.unkrig.antology.filter.TeeFilter" />
+	<componentdef name="replaceAll" classname="de.unkrig.antology.filter.ReplaceAllFilter" />
 
 	<!-- org.apache.tools.ant.taskdefs.condition.Condition definitions. -->
 	<componentdef name="every"      classname="de.unkrig.antology.condition.EveryCondition" />
