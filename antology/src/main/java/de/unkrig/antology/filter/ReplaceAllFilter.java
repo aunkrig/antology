@@ -30,14 +30,19 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.ProjectComponent;
 import org.apache.tools.ant.filters.ChainableReader;
 
+import de.unkrig.commons.lang.protocol.FunctionWhichThrows;
+import de.unkrig.commons.lang.protocol.Functions;
 import de.unkrig.commons.nullanalysis.NotNullByDefault;
 import de.unkrig.commons.nullanalysis.Nullable;
+import de.unkrig.commons.text.parser.ParseException;
+import de.unkrig.commons.text.pattern.ExpressionMatchReplacer;
 import de.unkrig.commons.text.pattern.PatternUtil;
 
 /**
@@ -49,15 +54,30 @@ import de.unkrig.commons.text.pattern.PatternUtil;
  *   and/or
  *   {@link Pattern#DOTALL &#40;?s)} (dotall mode).
  * </p>
+ * <p>
+ *   This filter reader is semantically almost equivalent with
+ * </p>
+ * <pre>
+ *   &lt;tokenfilter>
+ *     &lt;filetokenizer />
+ *     &lt;replaceregex
+ *       pattern="<var>regex</var>"
+ *       flags="s"
+ *       replace="<var>replacement-string</var>"
+ *     />
+ *   &lt;/tokenfilter>
+ * </pre>
+ * <p>
+ *   , but is much more efficient in many cases, because the {@code <filetokenizer />} always reads the entire content
+ *   into memory, while {@code <replaceAll />} processes the content in a "sliding" manner which requires only very
+ *   little memory if the regex matches relative short sequences.
+ * </p>
  */
 @NotNullByDefault(false) public
 class ReplaceAllFilter extends ProjectComponent implements ChainableReader {
 
 	public static
 	class PatternElement {
-
-		@Nullable private Pattern pattern;
-		@Nullable private String  replacementString;
 
 		public void
 		setPattern(String pattern) {
@@ -66,9 +86,38 @@ class ReplaceAllFilter extends ProjectComponent implements ChainableReader {
 			}
 			this.pattern = Pattern.compile(pattern);
 		}
+		@Nullable private Pattern pattern;
 
+	    /**
+	     * The "replacement string" to use for the substitution of each match.
+	     */
 		public void
-		setReplacementString(String replacementString) { this.replacementString = replacementString; }
+		setReplacementString(String replacementString) {
+		    if (this.matchReplacer != null) throw new BuildException("More than one replacement");
+		    this.matchReplacer = PatternUtil.<IOException>replacementStringMatchReplacer(replacementString);
+	    }
+
+	    /**
+	     * A "replacement expression" to use for the substitution of each match.
+	     * <p>
+	     *   Usage example:
+	     * </p>
+	     * <p>
+	     *   {@code replacementExpression="m.group.toUpperCase()"}
+	     * </p>
+	     */
+	    public void setReplacementExpression(String replacementExpression) {
+	        if (this.matchReplacer != null) throw new BuildException("More than one replacement");
+	        try {
+                this.matchReplacer = Functions.asFunctionWhichThrows(
+                    ExpressionMatchReplacer.parse(replacementExpression)
+                );
+            } catch (ParseException pe) {
+                throw new BuildException(pe);
+            }
+	    }
+	    @Nullable private FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException>
+	    matchReplacer;
 
 		public void
 		addText(String text) {
@@ -84,47 +133,84 @@ class ReplaceAllFilter extends ProjectComponent implements ChainableReader {
     chain(Reader reader) {
 
     	{
-	    	Pattern pattern           = this.pattern;
-	    	String  replacementString = this.replacementString;
+	    	Pattern
+	    	pattern = this.pattern;
 
-	    	if (pattern != null || replacementString != null) {
-	    		reader = ReplaceAllFilter.replaceAll(reader, pattern, replacementString);
+	    	FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException>
+	    	matchReplacer = this.matchReplacer;
+
+	    	if (pattern != null || matchReplacer != null) {
+	    		reader = ReplaceAllFilter.replaceAll(reader, pattern, matchReplacer);
 	    	}
     	}
 
     	for (PatternElement pe : this.patterns) {
-			reader = ReplaceAllFilter.replaceAll(reader, pe.pattern, pe.replacementString);
+			reader = ReplaceAllFilter.replaceAll(reader, pe.pattern, pe.matchReplacer);
 		}
 
     	return reader;
     }
 
 	private static Reader
-	replaceAll(Reader reader, @Nullable Pattern pattern, @Nullable String replacementString) {
+	replaceAll(
+	    Reader                                                                                        reader,
+	    @Nullable Pattern                                                                             pattern,
+	    @Nullable FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException> matchReplacer
+    ) {
 
-		if (pattern           == null) throw new BuildException("Pattern missing");
-		if (replacementString == null) throw new BuildException("Replacement string missing");
+		if (pattern       == null) throw new BuildException("Pattern missing");
+		if (matchReplacer == null) throw new BuildException("Replacement string and expression missing");
 
 		return PatternUtil.replaceAllFilterReader(
 			reader,
 			pattern,
-			PatternUtil.<IOException>replacementStringMatchReplacer(replacementString)
+			matchReplacer
 		);
 	}
 
     // ---------------- ANT attribute setters. ----------------
 
+	/**
+	 * The pattern to search for in the content.
+	 */
     public void setPattern(String pattern) { this.pattern = Pattern.compile(pattern); }
     @Nullable private Pattern pattern;
 
-    public void setReplacementString(String replacementString) { this.replacementString = replacementString; }
-    @Nullable private String replacementString;
+    /**
+     * The "replacement string" to use for the substitution of each match.
+     */
+    public void setReplacementString(String replacementString) {
+        if (this.matchReplacer != null) throw new BuildException("More than one replacement");
+        this.matchReplacer = PatternUtil.<IOException>replacementStringMatchReplacer(replacementString);
+    }
+    private FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException> matchReplacer;
 
+    /**
+     * A "replacement expression" to use for the substitution of each match.
+     * <p>
+     *   Usage example:
+     * </p>
+     * <p>
+     *   {@code replacementExpression="m.group.toUpperCase()"}
+     * </p>
+     */
+    public void setReplacementExpression(String replacementExpression) {
+        if (this.matchReplacer != null) throw new BuildException("More than one replacement");
+        try {
+            this.matchReplacer = Functions.asFunctionWhichThrows(ExpressionMatchReplacer.parse(replacementExpression));
+        } catch (ParseException pe) {
+            throw new BuildException(pe);
+        }
+    }
+
+    /**
+     * Another replacement specification (this filter reader can execute multiple replacements in a row).
+     */
     public void
     addConfiguredPattern(PatternElement element) {
 
-    	if (element.pattern           == null) throw new BuildException("Pattern missing");
-    	if (element.replacementString == null) throw new BuildException("Replacement string missing");
+    	if (element.pattern       == null) throw new BuildException("Pattern missing");
+    	if (element.matchReplacer == null) throw new BuildException("Replacement string and expression missing");
 
     	this.patterns.add(element);
 	}
