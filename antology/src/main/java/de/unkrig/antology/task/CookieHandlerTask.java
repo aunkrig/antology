@@ -60,6 +60,8 @@ class CookieHandlerTask extends Task {
     private final List<Runnable> actions = new ArrayList<Runnable>();
 
     /**
+     * Prints all currently stored cookies to STDOUT.
+     *
      * @see CookieHandler#get(URI, Map)
      */
     public void
