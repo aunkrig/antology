@@ -50,12 +50,12 @@ class SetCookieHandlerTask extends Task {
 
     @Override public void
     execute() throws BuildException {
-    	if (this.enable) {
-    		CookieHandler ch = CookieHandler.getDefault();
-    		if (ch instanceof CookieManager) return;
-    		CookieHandler.setDefault(new CookieManager());
-    	} else {
-    		CookieHandler.setDefault(null);
-    	}
+        if (this.enable) {
+            CookieHandler ch = CookieHandler.getDefault();
+            if (ch instanceof CookieManager) return;
+            CookieHandler.setDefault(new CookieManager());
+        } else {
+            CookieHandler.setDefault(null);
+        }
     }
 }

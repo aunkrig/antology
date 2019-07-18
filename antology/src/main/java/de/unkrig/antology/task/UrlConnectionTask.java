@@ -726,7 +726,7 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
 
             this.value = new Writable() {
                 @Override public void   write(OutputStream os) throws IOException { os.write(text.getBytes()); }
-                @Override public String toString()                                { return '"' + text + '"'; }
+                @Override public String toString()                                { return '"' + text + '"';   }
             };
         }
 
@@ -742,7 +742,7 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
 
             this.value = new Writable() {
                 @Override public void   write(OutputStream os) throws IOException { IoUtil.copy(file, os, false); }
-                @Override public String toString()                                { return file.toString(); }
+                @Override public String toString()                                { return file.toString();       }
             };
         }
 

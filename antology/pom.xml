@@ -56,27 +56,27 @@
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-lang</artifactId>
-    	<version>1.2.12-SNAPSHOT</version>
+    	<version>1.2.14-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-nullanalysis</artifactId>
-    	<version>1.2.12-SNAPSHOT</version>
+    	<version>1.2.14-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-util</artifactId>
-    	<version>1.2.12-SNAPSHOT</version>
+    	<version>1.2.14-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-net</artifactId>
-    	<version>1.2.12-SNAPSHOT</version>
+    	<version>1.2.14-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>de.unkrig.commons</groupId>
     	<artifactId>commons-junit4</artifactId>
-    	<version>1.2.12-SNAPSHOT</version>
+    	<version>1.2.14-SNAPSHOT</version>
     	<scope>test</scope>
     </dependency>
     <dependency>
@@ -191,10 +191,8 @@
           <windowtitle>${project.name} ${project.version}</windowtitle>
           <doctitle>The Antology ANT library</doctitle>
           <offlineLinks>
-            <offlineLink>
-              <url>http://commons.unkrig.de/javadoc</url>
-              <location>../../package-lists/de.unkrig.commons</location>
-            </offlineLink>
+            <offlineLink><url>http://commons.unkrig.de/commons-util/apidocs</url><location>../../package-lists/de.unkrig.commons-util</location></offlineLink>
+            <offlineLink><url>http://commons.unkrig.de/commons-text/apidocs</url><location>../../package-lists/de.unkrig.commons-text</location></offlineLink>
             <offlineLink>
               <url>https://commons.apache.org/proper/commons-net/apidocs</url>
               <location>../../package-lists/org.apache.commons.net</location>

@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.apache.tools.ant.BuildException;
@@ -76,114 +76,116 @@ import de.unkrig.commons.text.pattern.PatternUtil;
 @NotNullByDefault(false) public
 class ReplaceAllFilter extends ProjectComponent implements ChainableReader {
 
-	public static
-	class PatternElement {
+    public static
+    class PatternElement {
 
-		public void
-		setPattern(String pattern) {
-			if (this.pattern != null) {
-				throw new BuildException("\"pattern=...\" and \"<pattern>...</pattern>\" are mutually exclusive");
-			}
-			this.pattern = Pattern.compile(pattern);
-		}
-		@Nullable private Pattern pattern;
+        public void
+        setPattern(String pattern) {
+            if (this.pattern != null) {
+                throw new BuildException("\"pattern=...\" and \"<pattern>...</pattern>\" are mutually exclusive");
+            }
+            this.pattern = Pattern.compile(pattern);
+        }
+        @Nullable private Pattern pattern;
 
-	    /**
-	     * The "replacement string" to use for the substitution of each match.
-	     */
-		public void
-		setReplacementString(String replacementString) {
-		    if (this.matchReplacer != null) throw new BuildException("More than one replacement");
-		    this.matchReplacer = PatternUtil.<IOException>replacementStringMatchReplacer(replacementString);
-	    }
+        /**
+         * The "replacement string" to use for the substitution of each match.
+         */
+        public void
+        setReplacementString(String replacementString) {
+            if (this.matchReplacer != null) throw new BuildException("More than one replacement");
+            this.matchReplacer = PatternUtil.<IOException>replacementStringMatchReplacer(replacementString);
+        }
 
-	    /**
-	     * A "replacement expression" to use for the substitution of each match.
-	     * <p>
-	     *   Usage example:
-	     * </p>
-	     * <p>
-	     *   {@code replacementExpression="m.group.toUpperCase()"}
-	     * </p>
-	     */
-	    public void setReplacementExpression(String replacementExpression) {
-	        if (this.matchReplacer != null) throw new BuildException("More than one replacement");
-	        try {
+        /**
+         * A "replacement expression" to use for the substitution of each match.
+         * <p>
+         *   Usage example:
+         * </p>
+         * <p>
+         *   {@code replacementExpression="m.group.toUpperCase()"}
+         * </p>
+         */
+        public void
+        setReplacementExpression(String replacementExpression) {
+            if (this.matchReplacer != null) throw new BuildException("More than one replacement");
+            try {
                 this.matchReplacer = Functions.asFunctionWhichThrows(
                     ExpressionMatchReplacer.parse(replacementExpression)
                 );
             } catch (ParseException pe) {
                 throw new BuildException(pe);
             }
-	    }
-	    @Nullable private FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException>
-	    matchReplacer;
+        }
+        @Nullable private FunctionWhichThrows<? super MatchResult, ? extends CharSequence, ? extends IOException>
+        matchReplacer;
 
-		public void
-		addText(String text) {
-			text = text.trim();
-			if (text.isEmpty()) return;
-			this.setPattern(text);
-		}
-	}
+        public void
+        addText(String text) {
+            text = text.trim();
+            if (text.isEmpty()) return;
+            this.setPattern(text);
+        }
+    }
 
     // ---------------- Implementation of the weird ANT FilterReader pattern ----------------
 
     @Override public Reader
     chain(Reader reader) {
 
-    	{
-	    	Pattern
-	    	pattern = this.pattern;
+        {
+            Pattern
+            pattern = this.pattern;
 
-	    	FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException>
-	    	matchReplacer = this.matchReplacer;
+            FunctionWhichThrows<? super MatchResult, ? extends CharSequence, ? extends IOException>
+            matchReplacer = this.matchReplacer;
 
-	    	if (pattern != null || matchReplacer != null) {
-	    		reader = ReplaceAllFilter.replaceAll(reader, pattern, matchReplacer);
-	    	}
-    	}
+            if (pattern != null || matchReplacer != null) {
+                reader = ReplaceAllFilter.replaceAll(reader, pattern, matchReplacer);
+            }
+        }
 
-    	for (PatternElement pe : this.patterns) {
-			reader = ReplaceAllFilter.replaceAll(reader, pe.pattern, pe.matchReplacer);
-		}
+        for (PatternElement pe : this.patterns) {
+            reader = ReplaceAllFilter.replaceAll(reader, pe.pattern, pe.matchReplacer);
+        }
 
-    	return reader;
+        return reader;
     }
 
-	private static Reader
-	replaceAll(
-	    Reader                                                                                        reader,
-	    @Nullable Pattern                                                                             pattern,
-	    @Nullable FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException> matchReplacer
+    private static Reader
+    replaceAll(
+        Reader                                                                                            reader,
+        @Nullable Pattern                                                                                 pattern,
+        @Nullable FunctionWhichThrows<? super MatchResult, ? extends CharSequence, ? extends IOException> matchReplacer
     ) {
 
-		if (pattern       == null) throw new BuildException("Pattern missing");
-		if (matchReplacer == null) throw new BuildException("Replacement string and expression missing");
+        if (pattern       == null) throw new BuildException("Pattern missing");
+        if (matchReplacer == null) throw new BuildException("Replacement string and expression missing");
 
-		return PatternUtil.replaceAllFilterReader(
-			reader,
-			pattern,
-			matchReplacer
-		);
-	}
+        return PatternUtil.replaceAllFilterReader(
+            reader,
+            pattern,
+            matchReplacer
+        );
+    }
 
     // ---------------- ANT attribute setters. ----------------
 
-	/**
-	 * The pattern to search for in the content.
-	 */
+    /**
+     * The pattern to search for in the content.
+     */
     public void setPattern(String pattern) { this.pattern = Pattern.compile(pattern); }
     @Nullable private Pattern pattern;
 
     /**
      * The "replacement string" to use for the substitution of each match.
      */
-    public void setReplacementString(String replacementString) {
+    public void
+    setReplacementString(String replacementString) {
         if (this.matchReplacer != null) throw new BuildException("More than one replacement");
         this.matchReplacer = PatternUtil.<IOException>replacementStringMatchReplacer(replacementString);
     }
-    private FunctionWhichThrows<? super Matcher, ? extends CharSequence, ? extends IOException> matchReplacer;
+    private FunctionWhichThrows<? super MatchResult, ? extends CharSequence, ? extends IOException> matchReplacer;
 
     /**
      * A "replacement expression" to use for the substitution of each match.
@@ -194,7 +196,8 @@ class ReplaceAllFilter extends ProjectComponent implements ChainableReader {
      *   {@code replacementExpression="m.group.toUpperCase()"}
      * </p>
      */
-    public void setReplacementExpression(String replacementExpression) {
+    public void
+    setReplacementExpression(String replacementExpression) {
         if (this.matchReplacer != null) throw new BuildException("More than one replacement");
         try {
             this.matchReplacer = Functions.asFunctionWhichThrows(ExpressionMatchReplacer.parse(replacementExpression));
@@ -209,10 +212,10 @@ class ReplaceAllFilter extends ProjectComponent implements ChainableReader {
     public void
     addConfiguredPattern(PatternElement element) {
 
-    	if (element.pattern       == null) throw new BuildException("Pattern missing");
-    	if (element.matchReplacer == null) throw new BuildException("Replacement string and expression missing");
+        if (element.pattern       == null) throw new BuildException("Pattern missing");
+        if (element.matchReplacer == null) throw new BuildException("Replacement string and expression missing");
 
-    	this.patterns.add(element);
-	}
+        this.patterns.add(element);
+    }
     private List<PatternElement> patterns = new ArrayList<PatternElement>();
 }

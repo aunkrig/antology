@@ -49,14 +49,14 @@ import de.unkrig.commons.nullanalysis.Nullable;
 public
 class CookieHandlerTask extends Task {
 
-	public static final
-	class PrintElement {
+    public static final
+    class PrintElement {
 
-		@Nullable private URI uri;
+        @Nullable private URI uri;
 
-		public void
-		setUri(URI uri) { this.uri = uri; }
-	}
+        public void
+        setUri(URI uri) { this.uri = uri; }
+    }
     private final List<Runnable> actions = new ArrayList<Runnable>();
 
     /**
@@ -67,34 +67,34 @@ class CookieHandlerTask extends Task {
     public void
     addConfiguredPrint(PrintElement element) {
 
-    	final URI uri = element.uri;
-    	if (uri == null) throw new BuildException("\"uri=...\" attribute must be set");
+        final URI uri = element.uri;
+        if (uri == null) throw new BuildException("\"uri=...\" attribute must be set");
 
-    	this.actions.add(new Runnable() {
+        this.actions.add(new Runnable() {
 
-			@Override public void
-			run() {
+            @Override public void
+            run() {
 
-				CookieHandler ch = CookieHandler.getDefault();
-				if (ch == null) throw new BuildException("No cookie handler installed");
+                CookieHandler ch = CookieHandler.getDefault();
+                if (ch == null) throw new BuildException("No cookie handler installed");
 
-				Map<String, List<String>> cookieHeaders;
-				try {
-					cookieHeaders = ch.get(uri, Collections.<String, List<String>>emptyMap());
-				} catch (IOException e) {
-					throw new BuildException(e);
-				}
+                Map<String, List<String>> cookieHeaders;
+                try {
+                    cookieHeaders = ch.get(uri, Collections.<String, List<String>>emptyMap());
+                } catch (IOException e) {
+                    throw new BuildException(e);
+                }
 
-				for (Entry<String, List<String>> e : cookieHeaders.entrySet()) {
-					String       headerName   = e.getKey();
-					List<String> headerValues = e.getValue();
-					System.out.println(headerName + ":");
-					for (String headerValue : headerValues) {
-						System.out.println(headerValue);
-					}
-				}
-			}
-		});
+                for (Entry<String, List<String>> e : cookieHeaders.entrySet()) {
+                    String       headerName   = e.getKey();
+                    List<String> headerValues = e.getValue();
+                    System.out.println(headerName + ":");
+                    for (String headerValue : headerValues) {
+                        System.out.println(headerValue);
+                    }
+                }
+            }
+        });
     }
 
     @Override public void
