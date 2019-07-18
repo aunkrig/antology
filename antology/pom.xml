@@ -160,7 +160,7 @@
             <docletArtifact>
               <groupId>de.unkrig</groupId>
               <artifactId>doclet-ant</artifactId>
-              <version>1.0.7-SNAPSHOT</version>
+              <version>1.0.8-SNAPSHOT</version>
             </docletArtifact>
 
 			<!-- The ANT doclet requires "ant.jar" on its classpath: -->
