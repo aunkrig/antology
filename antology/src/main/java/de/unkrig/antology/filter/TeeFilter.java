@@ -43,6 +43,7 @@ import org.apache.tools.ant.types.FilterChain;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.util.ReaderInputStream;
 
+import de.unkrig.antology.util.Compat;
 import de.unkrig.commons.io.IoUtil;
 import de.unkrig.commons.io.Readers;
 import de.unkrig.commons.io.WyeReader;
@@ -101,7 +102,7 @@ class TeeFilter extends ProjectComponent implements ChainableReader {
             crh.setPrimaryReader(pipedReader);
             crh.setFilterChains(this.filterChains);
             crh.setProject(this.getProject());
-            reader2 = crh.getAssembledReader();
+            reader2 = Compat.getAssembledReader(crh);
         }
 
         // Start a background thread that reads the the pipe (through the filter chains) into the sink.

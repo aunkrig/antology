@@ -52,6 +52,7 @@ import org.apache.tools.ant.filters.util.ChainReaderHelper;
 import org.apache.tools.ant.types.FilterChain;
 
 import de.unkrig.antology.AbstractUrlConnectionTask;
+import de.unkrig.antology.util.Compat;
 import de.unkrig.commons.io.InputStreams;
 import de.unkrig.commons.io.IoUtil;
 import de.unkrig.commons.io.OutputStreams;
@@ -428,7 +429,7 @@ class FollowTask extends AbstractUrlConnectionTask {
 
             // Notice: 'ChainReaderHelper.getAssembledReader()' is anything but omnipotent - it creates the complete
             // filter chain.
-            final Reader r = new BufferedReader(crh.getAssembledReader());
+            final Reader r = new BufferedReader(Compat.getAssembledReader(crh));
 
             return new InputStreamSucker() {
 

@@ -32,13 +32,14 @@
 
   <groupId>de.unkrig</groupId>
   <artifactId>antology</artifactId>
-  <version>2.0.6-SNAPSHOT</version>
+  <version>2.0.6</version>
   <packaging>jar</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
+    <jdk.8.home>c:/dev/Java/jdk-8u112/</jdk.8.home>
   </properties>
 
   <dependencies>
@@ -95,6 +96,7 @@
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
+          <descriptor>antlib-assembly-descriptor.xml</descriptor>
         </configuration>
         <executions>
           <execution>
@@ -211,7 +213,32 @@
 
   <profiles>
 
-    <!-- Signs all artifacts with GPG (oss.sonatype.org requires that). -->
+<!--
+  oss.sonatype.org requires that all artifacts are signed with GPG.
+  To enable signing with GPG, modify your "settings.xml" like this:
+
+    <settings>
+  ...
+      <profiles>
+  ...
+        <profile>
+          <id>have_gpg</id>
+          <properties>
+            <gpg.executable>c:\gpg.exe</gpg.executable>
+            <gpg.useAgent>false</gpg.useAgent>
+            <gpg.keyname>me@home.com</gpg.keyname>
+            <gpg.passphrase>xxx</gpg.passphrase>
+          </properties>
+        </profile>
+      </profiles>
+  ...
+      <activeProfiles>
+  ...
+        <activeProfile>have_gpg</activeProfile>
+      </activeProfiles>
+  ...
+    </settings>
+-->
     <profile>
       <id>have_gpg</id>
       <build>

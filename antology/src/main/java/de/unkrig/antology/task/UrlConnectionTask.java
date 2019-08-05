@@ -60,6 +60,7 @@ import de.unkrig.antology.AbstractUrlConnectionTask;
 import de.unkrig.antology.ParametrizedHeaderValue;
 import de.unkrig.antology.type.JsonAsProperties;
 import de.unkrig.antology.type.Subelement;
+import de.unkrig.antology.util.Compat;
 import de.unkrig.commons.io.IoUtil;
 import de.unkrig.commons.lang.AssertionUtil;
 import de.unkrig.commons.nullanalysis.Nullable;
@@ -615,7 +616,7 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
             crh.setPrimaryReader(r);
             crh.setFilterChains(this.filterChains);
 //            crh.setProject(UrlConnectionTask.this.getProject());
-            return new BufferedReader(crh.getAssembledReader());
+            return new BufferedReader(Compat.getAssembledReader(crh));
         }
 
         private
