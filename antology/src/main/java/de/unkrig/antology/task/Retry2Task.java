@@ -139,7 +139,7 @@ class Retry2Task extends Task implements TaskContainer {
                 throw new BuildException(ie);
             }
         }
-        this.log("Retrying...", Project.MSG_INFO);
+        this.log("Retry #" + (n + 1) + (retryCount == null ? "" : " of " + retryCount) + "...", Project.MSG_INFO);
 
         return true;
     }
