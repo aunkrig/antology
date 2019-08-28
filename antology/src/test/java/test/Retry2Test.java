@@ -73,11 +73,11 @@ class Retry2Test {
             + "\\S+test_retry2\\.ant:\\d+: "
             + "Nested task failed"
             + "Will retry in 1s \\(on 2012-01-01 00:00:01.000\\)..."
-            + "Retrying..."
+            + "Retry #1 of 2..."
             + "\\S+test_retry2\\.ant:\\d+: "
             + "Nested task failed"
             + "Will retry in 2s \\(on 2012-01-01 00:00:02.000\\)..."
-            + "Retrying..."
+            + "Retry #2 of 2..."
             + "\\S+test_retry2\\.ant:\\d+: "
             + "Nested task failed"
         ), this.rule.getLog());
