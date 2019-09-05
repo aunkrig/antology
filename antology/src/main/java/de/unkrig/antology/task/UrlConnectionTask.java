@@ -26,6 +26,8 @@
 
 package de.unkrig.antology.task;
 
+import static org.apache.tools.ant.Project.MSG_WARN;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -121,6 +123,8 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
     @Nullable private Input  input;
     @Nullable private Output output;
     @Nullable private String httpRequestMethod;
+
+    private static boolean hadNtlmWarning;
 
     // ATTRIBUTE SETTERS
 
@@ -882,6 +886,22 @@ class UrlConnectionTask extends AbstractUrlConnectionTask {
                     "... response header received after " + (System.currentTimeMillis() - l) + " ms.",
                     Project.MSG_DEBUG
                 );
+            }
+
+            if (httpConn.getResponseCode() == 401) {
+                List<String> auths = httpConn.getHeaderFields().get("WWW-Authenticate");
+                if (auths != null && auths.contains("NTLM")) {
+                    if (!UrlConnectionTask.hadNtlmWarning) {
+                        this.log((
+                            ""
+                            + "Since Java 1.8.0_201, transparent NTLM authentification is disabled by default.\n"
+                            + "To re-enable it, you may want to set this system property:\n"
+                            + "    jdk.http.ntlm.transparentAuth = allHosts\n"
+                            + "See https://bugs.openjdk.java.net/browse/JDK-8225506"
+                        ), Project.MSG_WARN);
+                        UrlConnectionTask.hadNtlmWarning = true;
+                    }
+                }
             }
 
             this.log("Response header:", Project.MSG_DEBUG);
