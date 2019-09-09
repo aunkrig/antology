@@ -185,16 +185,22 @@
             -theme       JAVA7
           </additionalparam>
 
+          <!-- Because we leave "useStandardDocletOptions" on, we must do THIS: -->
           <author>false</author>
           <use>false</use>
           <version>false</version>
-          <header>${project.name} ${project.version}</header>
-          <footer>${project.name} ${project.version}</footer>
-          <windowtitle>${project.name} ${project.version}</windowtitle>
-          <doctitle>The Antology ANT library</doctitle>
+
+          <windowtitle>${project.name}</windowtitle>
+          <doctitle>The Antology ANT library, Version ${project.version}</doctitle>
           <offlineLinks>
-            <offlineLink><url>http://commons.unkrig.de/commons-util/apidocs</url><location>../../package-lists/de.unkrig.commons-util</location></offlineLink>
-            <offlineLink><url>http://commons.unkrig.de/commons-text/apidocs</url><location>../../package-lists/de.unkrig.commons-text</location></offlineLink>
+            <offlineLink>
+              <url>http://commons.unkrig.de/commons-util/apidocs</url>
+              <location>../../package-lists/de.unkrig.commons-util</location>
+            </offlineLink>
+            <offlineLink>
+              <url>http://commons.unkrig.de/commons-text/apidocs</url>
+              <location>../../package-lists/de.unkrig.commons-text</location>
+            </offlineLink>
             <offlineLink>
               <url>https://commons.apache.org/proper/commons-net/apidocs</url>
               <location>../../package-lists/org.apache.commons.net</location>
