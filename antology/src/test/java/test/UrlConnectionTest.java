@@ -54,13 +54,13 @@ class UrlConnectionTest {
     @Test public void
     test1() {
         this.rule.executeTarget("test1");
-        AssertString.assertContains("Statusabfrage des Tomcat f", this.rule.getOutput());
+        AssertString.assertContains("Checking for Tomcat: dal-i.intra.swm.de", this.rule.getOutput());
     }
 
     @Ignore
     @Test public void
     test2() {
         this.rule.executeTarget("test2");
-        AssertString.assertContains("Statusabfrage des Tomcat f", this.rule.getOutput());
+        AssertString.assertContains("Checking for Tomcat: dal-i.intra.swm.de", this.rule.getOutput());
     }
 }
