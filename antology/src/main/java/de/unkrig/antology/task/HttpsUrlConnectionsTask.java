@@ -29,13 +29,15 @@ package de.unkrig.antology.task;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 import de.unkrig.commons.net.security.HttpsUrlConnections;
 
 /**
- * @see #setDisableSslCertificateValidation(boolean)
+ * Configures Java's {@link HttpsURLConnection}.
  */
 public
 class HttpsUrlConnectionsTask extends Task  {
