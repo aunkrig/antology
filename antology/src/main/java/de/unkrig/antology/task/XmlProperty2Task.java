@@ -415,17 +415,17 @@ class XmlProperty2Task extends Task {
             // Entities don't really work... E.g. "&amp;" invokes "startEntity("amp")", then "endEntity("amp")" (so
             // far so good), then "characters("&")" (!?). Even worse, when we later attempt to re-produce the entity
             // (""Document.createEntityReference("amp")"), we get ""!?.
-            @NotNullByDefault(false) @Override public void startEntity(String name) {}
-            @NotNullByDefault(false) @Override public void endEntity(String name)   {}
+            @Override public void startEntity(String name) {}
+            @Override public void endEntity(String name)   {}
 
             // We're not (yet) interested in these.
-            @NotNullByDefault(false) @Override public void startDTD(String name, String publicId, String systemId) {}
-            @Override public void                          endDTD()                                                {}
+            @Override public void startDTD(String name, String publicId, String systemId) {}
+            @Override public void endDTD()                                                {}
 
             @Override public void startCDATA() { this.elementStack.peek().inCdata = true;  }
             @Override public void endCDATA()   { this.elementStack.peek().inCdata = false; }
 
-            @Override @NotNullByDefault(false) public void
+            @Override public void
             comment(char[] ch, int start, int length) {
                 String s = new String(ch, start, length);
 

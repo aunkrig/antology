@@ -26,8 +26,6 @@
 
 package de.unkrig.antology.task;
 
-import static org.apache.tools.ant.Project.MSG_WARN;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
