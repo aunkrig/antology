@@ -33,8 +33,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -107,6 +110,10 @@ import de.unkrig.commons.util.collections.Stack;
  *   <li>
  *     The existence of a property named "{@code *.$$}" indicates the existence of the respective element in the XML
  *     document.
+ *   </li>
+ *   <li>
+ *     According to the <a href="https://www.w3.org/TR/2008/REC-xml-20081126/#sec-starttags">XML recommendation</a>,
+ *     the order of attribute specifications is not significant; thus there is no need to store indexes of attributes.
  *   </li>
  * </ul>
  *
@@ -343,6 +350,8 @@ class XmlProperty2Task extends Task {
         @NotNullByDefault(false)
         class MyContentAndLexicalHandler implements ContentHandler, LexicalHandler {
 
+        	Map<String, String> prefixMappings = new HashMap<>();
+
             class El {
                 final String  prefix;
                 int           index;
@@ -361,17 +370,32 @@ class XmlProperty2Task extends Task {
             @Override public void
             endDocument() { assert this.elementStack.size() == 1; }
 
-            @Override public void startPrefixMapping(String prefix, String uri) {}
-            @Override public void endPrefixMapping(String prefix)               {}
+            @Override public void
+            startPrefixMapping(String prefix, String uri) {
+
+            	// Prefix mappings are extremely weirdto handle: They must be stored with the FOLLOWING element!
+            	assert this.elementStack.size() == 1;
+                this.prefixMappings.put(prefix, uri);
+            }
+
+            @Override public void
+            endPrefixMapping(String prefix) {}
 
             @Override public void
             startElement(String uri, String localName, String qName, Attributes atts) {
-
                 El     el = this.elementStack.peek();
                 String p  = el.prefix + el.index++ + '.' + qName + '.';
 
+                for (Entry<String, String> e : this.prefixMappings.entrySet()) {
+                	String prefix = e.getKey();
+                	String uri2   = e.getValue();
+
+                	project.setProperty(p + (prefix.isEmpty() ? "_xmlns" : "_xmlns:" + prefix), uri2);
+                }
+                this.prefixMappings.clear();
+
                 for (int i = 0; i < atts.getLength(); i++) {
-                    project.setProperty(p + '_' + atts.getLocalName(i), atts.getValue(i));
+                    project.setProperty(p + '_' + atts.getQName(i), atts.getValue(i));
                 }
 
                 this.elementStack.push(new El(p));

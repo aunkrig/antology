@@ -242,7 +242,12 @@ class PropertyXml2Task extends Task {
             String attributeName  = att.getKey();
             String attributeValue = att.getValue();
 
-            element.setAttribute(attributeName, attributeValue);
+            int idx = attributeName.indexOf('.');
+            if (idx == -1) {
+            	element.setAttribute(attributeName, attributeValue);
+            } else {
+            	element.setAttributeNS(attributeName.substring(0, idx), attributeName.substring(idx + 1), attributeValue);
+            }
         }
 
         PropertyXml2Task.createSubelements(allProperties, prefix + elementName + '.', element, document);
