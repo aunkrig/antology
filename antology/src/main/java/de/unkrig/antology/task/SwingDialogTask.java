@@ -109,7 +109,10 @@ import de.unkrig.commons.nullanalysis.Nullable;
  *   <dd>{@code <head><basefont color="red" /></head>} (has no effect)</dd>
  *   <dd>{@code <head><meta name="author" content="me" /></head>} (prints as text)</dd>
  *   <dd>{@code <head><noscript>NOSCRIPT</noscript></head>} (prints as text)</dd>
- *   <dd>{@code <head><style>h1 { color:red; }</style></head>} (must be the first tag after "<html>")</dd>
+ *   <dd>
+ *     {@code <head><style>h1 }<code>{ </code>{@code color:red; }<code>}</code>{@code </style></head>}
+ *     (must be the first tag after "&lt;html>")
+ *   </dd>
  *   <dd>{@code <hr>Horizontal ruler</hr>}</dd>
  *   <dd>{@code <i>Italic text</i>}</dd>
  *   <dd>{@code <img src="icon.png" />}</dd>
@@ -1130,10 +1133,7 @@ class SwingDialogTask extends Task {
             return;
         }
 
-        Object[] oa = new Object[2];
-        oa[0]        = this.message;
-        oa[1]        = message;
-        this.message = oa;
+        this.message = new Object[] { this.message, message };
     }
 
     /***/
