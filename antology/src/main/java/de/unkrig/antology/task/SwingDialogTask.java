@@ -148,24 +148,34 @@ import de.unkrig.commons.nullanalysis.Nullable;
  * <dl>
  *   <dt>{@code <applet>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
+ *
  *   <dt>{@code <frame>}</dt>
  *   <dd>java.lang.RuntimeException: Can't build aframeset, BranchElement(frameset) 226,227</dd>
+ *
  *   <dt>{@code <frameset>}</dt>
  *   <dd>java.lang.RuntimeException: Can't build aframeset, BranchElement(frameset) 226,227</dd>
- *   <dt>{@code <head><link rel="stylesheet" type="text/css" href="theme.css" /></head>}</dd>
+ *
+ *   <dt>{@code <head><link rel="stylesheet" type="text/css" href="theme.css" /></head>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
- *   <dt>{@code <head><script>alert('Hi there!');</script></head>}</dd>
+ *
+ *   <dt>{@code <head><script>alert('Hi there!');</script></head>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
- *   <dt>{@code <head><title>TITLE</title></head>}</dd>
+ *
+ *   <dt>{@code <head><title>TITLE</title></head>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
+ *
  *   <dt>{@code <input type="submit" />}</dt>
  *   <dd>Exception in thread "AWT-EventQueue-0" java.lang.NullPointerException</dd>
+ *
  *   <dt>{@code <link>}</dt>
  *   <dd>javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
+ *
  *   <dt>{@code <noframes>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
+ *
  *   <dt>{@code <script>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
+ *
  *   <dt>{@code <title>}</dt>
  *   <dd>java.lang.ClassCastException: javax.swing.JLabel cannot be cast to javax.swing.text.JTextComponent</dd>
  * </dl>
