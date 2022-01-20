@@ -55,7 +55,7 @@ class NslookupTest {
         this.rule.executeTarget("test1");
         Assert.assertEquals("127.0.0.1,0:0:0:0:0:0:0:1", this.rule.getProject().getProperty("addresses"));
         Assert.assertEquals("127.0.0.1",                 this.rule.getProject().getProperty("address"));
-        Assert.assertEquals("127.0.0.1",                 this.rule.getProject().getProperty("canonicalHostName"));
+        AssertRegex.assertMatches("[\\w\\-.]+",          this.rule.getProject().getProperty("canonicalHostName"));
         Assert.assertEquals("localhost",                 this.rule.getProject().getProperty("hostName"));
     }
 
